@@ -1,16 +1,18 @@
+import urllib.parse
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from typing import List, Dict, Any
 from config import WEBAPP_BASE_URL
 
-def get_level_selection_kb(telegram_id: int) -> InlineKeyboardMarkup:
+def get_level_selection_kb(telegram_id: int, full_name: str = "") -> InlineKeyboardMarkup:
     """
     Ro'yxatdan o'tgach darajani tanlash yoki Web App orqali test topshirish
     """
     is_https = WEBAPP_BASE_URL.startswith("https://")
+    name_param = f"&name={urllib.parse.quote(full_name.strip())}" if full_name else ""
     if "netlify.app" in WEBAPP_BASE_URL:
-        test_url = f"{WEBAPP_BASE_URL}/?tab=test&uid={telegram_id}"
+        test_url = f"{WEBAPP_BASE_URL}/?tab=test&uid={telegram_id}{name_param}"
     else:
-        test_url = f"{WEBAPP_BASE_URL}/webapp/portal?tab=test&uid={telegram_id}"
+        test_url = f"{WEBAPP_BASE_URL}/webapp/portal?tab=test&uid={telegram_id}{name_param}"
 
     if is_https:
         test_btn = InlineKeyboardButton(text="🎯 Darajani aniqlash (Online Test)", web_app=WebAppInfo(url=test_url))
@@ -68,12 +70,10 @@ def get_manager_lead_kb(telegram_id: int, phone: str = "") -> InlineKeyboardMark
     clean_phone = phone.replace("+", "").replace(" ", "").replace("-", "") if phone else ""
     buttons = []
     
-    # Tezkor qo'ng'iroq va profil
-    row_top = []
-    if clean_phone:
-        row_top.append(InlineKeyboardButton(text="📞 Qo'ng'iroq", url=f"tel:+{clean_phone}"))
-    row_top.append(InlineKeyboardButton(text="👤 Profil", url=f"tg://user?id={telegram_id}"))
-    buttons.append(row_top)
+    # Tezkor profil
+    buttons.append([
+        InlineKeyboardButton(text="👤 Profilga o'tish", url=f"tg://user?id={telegram_id}")
+    ])
 
     # Status boshqaruvi
     buttons.append([

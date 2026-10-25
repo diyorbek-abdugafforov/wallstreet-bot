@@ -27,18 +27,17 @@ async def show_reception_contact(message: types.Message):
     clean_phone = phone1.replace("+", "").replace(" ", "").replace("-", "")
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📞 Receptionga qo'ng'iroq", url=f"tel:+{clean_phone}")],
         [InlineKeyboardButton(text="💬 Administratorga yozish", url="https://t.me/edubot_admin")]
     ])
 
     text = (
         f"🏢 <b>{settings.get('center_name', CENTER_NAME)} Reception</b>\n"
         f"━━━━━━━━━━━━━━━━━━\n"
-        f"📞 <b>Asosiy telefon:</b> {phone1}\n"
+        f"📞 <b>Asosiy telefon:</b> <a href=\"tel:+{clean_phone}\">{phone1}</a>\n"
         f"📱 <b>Qo'shimcha raqam:</b> {phone2}\n"
         f"⏰ <b>Ish vaqti:</b> {work_hours}\n"
         f"📍 <b>Manzil:</b> {address}\n\n"
-        f"<i>Savollaringiz bo'lsa, xodimlarimiz doim yordam berishga tayyor!</i>"
+        f"<i>Raqam ustiga bosib bevosita qo'ng'iroq qilishingiz yoki administrator bilan bog'lanishingiz mumkin.</i>"
     )
     await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
@@ -90,28 +89,42 @@ async def process_promocode_input(message: types.Message, state: FSMContext, db:
         )
         await message.answer(text, reply_markup=get_main_menu_kb(message.from_user.id, is_admin), parse_mode="HTML")
 
-def get_page_url(page_name: str, uid: int = 0) -> str:
+import urllib.parse
+
+def get_page_url(page_name: str, uid: int = 0, name: str = "") -> str:
+    name_encoded = urllib.parse.quote(name.strip()) if name else ""
+    name_param = f"&name={name_encoded}" if name_encoded else ""
     if "netlify.app" in WEBAPP_BASE_URL:
         if page_name == "bonus-test":
-            return f"{WEBAPP_BASE_URL}/bonus_test.html?uid={uid}"
+            return f"{WEBAPP_BASE_URL}/bonus_test.html?uid={uid}{name_param}"
         elif page_name in ["courses", "schedule", "results", "reception", "test"]:
-            return f"{WEBAPP_BASE_URL}/?tab={page_name}&uid={uid}"
+            return f"{WEBAPP_BASE_URL}/?tab={page_name}&uid={uid}{name_param}"
         else:
-            return f"{WEBAPP_BASE_URL}/?uid={uid}"
+            return f"{WEBAPP_BASE_URL}/?uid={uid}{name_param}"
     else:
         if page_name in ["courses", "schedule", "results", "reception", "test"]:
-            return f"{WEBAPP_BASE_URL}/webapp/portal?tab={page_name}&uid={uid}"
+            return f"{WEBAPP_BASE_URL}/webapp/portal?tab={page_name}&uid={uid}{name_param}"
         elif page_name == "bonus-test":
-            return f"{WEBAPP_BASE_URL}/webapp/bonus-test?uid={uid}"
+            return f"{WEBAPP_BASE_URL}/webapp/bonus-test?uid={uid}{name_param}"
         else:
-            return f"{WEBAPP_BASE_URL}/webapp/portal?uid={uid}"
+            return f"{WEBAPP_BASE_URL}/webapp/portal?uid={uid}{name_param}"
+
+async def _get_student_name(message: types.Message, db: Database) -> str:
+    try:
+        st = await db.get_student(message.from_user.id)
+        if st and st.get("full_name"):
+            return st["full_name"]
+    except Exception:
+        pass
+    return message.from_user.full_name or "O'quvchi"
 
 # --- DARS VAQTLARI ---
 @router.message(F.text == "🕒 Dars vaqtlari")
-async def open_schedule_webapp(message: types.Message):
+async def open_schedule_webapp(message: types.Message, db: Database):
     is_https = WEBAPP_BASE_URL.startswith("https://")
     if is_https:
-        url = get_page_url("schedule")
+        name = await _get_student_name(message, db)
+        url = get_page_url("schedule", uid=message.from_user.id, name=name)
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🕒 Dars jadvalini ochish (Web App)", web_app=WebAppInfo(url=url))]
         ])
@@ -129,10 +142,11 @@ async def open_schedule_webapp(message: types.Message):
 
 # --- KURS NARXLARI ---
 @router.message(F.text == "📚 Kurs narxlari")
-async def open_courses_webapp(message: types.Message):
+async def open_courses_webapp(message: types.Message, db: Database):
     is_https = WEBAPP_BASE_URL.startswith("https://")
     if is_https:
-        url = get_page_url("courses")
+        name = await _get_student_name(message, db)
+        url = get_page_url("courses", uid=message.from_user.id, name=name)
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="📚 Kurslar va narxlar (Web App)", web_app=WebAppInfo(url=url))]
         ])
@@ -152,10 +166,11 @@ async def open_courses_webapp(message: types.Message):
 
 # --- WALL STREET NATIJALARI ---
 @router.message(F.text == "🏆 Wall Street natijalari")
-async def open_results_webapp(message: types.Message):
+async def open_results_webapp(message: types.Message, db: Database):
     is_https = WEBAPP_BASE_URL.startswith("https://")
     if is_https:
-        url = get_page_url("results")
+        name = await _get_student_name(message, db)
+        url = get_page_url("results", uid=message.from_user.id, name=name)
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🏆 Natijalar va sertifikatlar (Web App)", web_app=WebAppInfo(url=url))]
         ])
@@ -173,10 +188,11 @@ async def open_results_webapp(message: types.Message):
 
 # --- BONUS TEST ---
 @router.message(F.text == "🎯 Bonus test")
-async def open_bonus_test_webapp(message: types.Message):
+async def open_bonus_test_webapp(message: types.Message, db: Database):
     is_https = WEBAPP_BASE_URL.startswith("https://")
     if is_https:
-        url = get_page_url("bonus-test", uid=message.from_user.id)
+        name = await _get_student_name(message, db)
+        url = get_page_url("bonus-test", uid=message.from_user.id, name=name)
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="🎯 Bonus testni boshlash (Web App)", web_app=WebAppInfo(url=url))]
         ])
@@ -193,9 +209,10 @@ async def open_bonus_test_webapp(message: types.Message):
 
 # --- YAGONA WEB APP PORTALI (BARCHA BO'LIMLAR BIR JOYDA) ---
 @router.message(F.text == "📱 Wall Street Web App (Barcha bo'limlar)")
-async def open_main_portal(message: types.Message):
+async def open_main_portal(message: types.Message, db: Database):
     is_https = WEBAPP_BASE_URL.startswith("https://")
-    portal_url = f"{WEBAPP_BASE_URL}/?uid={message.from_user.id}"
+    name = await _get_student_name(message, db)
+    portal_url = get_page_url("portal", uid=message.from_user.id, name=name)
 
     if is_https:
         kb = InlineKeyboardMarkup(inline_keyboard=[

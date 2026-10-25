@@ -110,6 +110,6 @@ async def save_registration_and_offer_test(message: types.Message, state: FSMCon
 
     await message.answer(
         offer_text,
-        reply_markup=get_level_selection_kb(telegram_id=user_id),
+        reply_markup=get_level_selection_kb(telegram_id=user_id, full_name=full_name),
         parse_mode="HTML"
     )

@@ -14,7 +14,7 @@ services:
       - key: MANAGER_GROUP_ID
         value: "-1002923292267"
       - key: WEBAPP_BASE_URL
-        value: https://wollstreet.netlify.app
+        value: https://starlit-snickerdoodle-9f14e6.netlify.app
       - key: ADMIN_USERNAME
         value: admin
       - key: ADMIN_PASSWORD

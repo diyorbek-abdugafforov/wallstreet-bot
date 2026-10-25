@@ -1,7 +1,13 @@
 import asyncio
 import logging
 import sys
+import subprocess
+import re
+from typing import Optional
+from pathlib import Path
 import uvicorn
+import config
+from config import BOT_TOKEN, ADMINS, WEB_HOST, WEB_PORT, WEBAPP_BASE_URL
 
 if hasattr(sys.stdout, 'reconfigure'):
     try:
@@ -11,7 +17,6 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from config import BOT_TOKEN, ADMINS, WEB_HOST, WEB_PORT, WEBAPP_BASE_URL
 from database import Database
 from services.scheduler import check_reminders_task
 
@@ -37,16 +42,48 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+cloudflared_process: Optional[subprocess.Popen] = None
+
+def start_cloudflared_tunnel(port: int = 8000) -> Optional[str]:
+    """Cloudflare tunnelini fonda ishga tushirib, avtomatik yangi jonli havola olish"""
+    global cloudflared_process
+    cf_path = Path(__file__).resolve().parent / "cloudflared.exe"
+    if not cf_path.exists():
+        logger.warning("cloudflared.exe topilmadi. Faqat lokal server ishlaydi.")
+        return None
+
+    try:
+        cloudflared_process = subprocess.Popen(
+            [str(cf_path), "tunnel", "--url", f"http://localhost:{port}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace"
+        )
+        for _ in range(80):
+            line = cloudflared_process.stderr.readline()
+            if not line and cloudflared_process.poll() is not None:
+                break
+            m = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
+            if m:
+                live_url = m.group(0).rstrip("/")
+                config.ADMIN_TUNNEL_URL = live_url
+                return live_url
+    except Exception as e:
+        logger.warning(f"Cloudflare tunnel ishga tushirishda xatolik: {e}")
+    return None
+
 async def run_web_server():
     """FastAPI Web App va CMS serverini fonda ishga tushirish"""
-    config = uvicorn.Config(
+    cfg = uvicorn.Config(
         app=web_app,
         host=WEB_HOST,
         port=WEB_PORT,
         log_level="warning"
     )
-    server = uvicorn.Server(config)
-    logger.info(f"🌐 Web App & Admin CMS ishga tushdi: http://localhost:{WEB_PORT}/admin (Tashqi URL: {WEBAPP_BASE_URL})")
+    server = uvicorn.Server(cfg)
+    logger.info(f"🌐 Web App & Admin CMS ishga tushdi: http://localhost:{WEB_PORT}/admin")
     await server.serve()
 
 async def main():
@@ -80,9 +117,23 @@ async def main():
     dp.include_router(student_menu_router)
     dp.include_router(web_app_router)
 
-    # Fon vazifalarini ishga tushirish (Eslatmalar va Web Server)
+    # Fon vazifalarini ishga tushirish (Web Server va Eslatmalar)
     web_server_task = asyncio.create_task(run_web_server())
     reminder_task = asyncio.create_task(check_reminders_task(bot, db))
+
+    # Cloudflare tunnelni ishga tushirish (agar mavjud bo'lsa)
+    tunnel_url = start_cloudflared_tunnel(WEB_PORT)
+    if tunnel_url:
+        logger.info(f"🌐 Cloudflare jonli tunnel ulandi: {tunnel_url}/admin")
+    else:
+        logger.info(f"🌐 Standart havola ishlatiladi: {config.ADMIN_TUNNEL_URL}/admin")
+
+    print("\n" + "=" * 65)
+    print("🚀 WALL STREET EDUBOT & ADMIN PANEL ISHGA TUSHDI!")
+    print(f"💻 Kompyuterda:            http://localhost:{WEB_PORT}/admin")
+    print(f"📱 Telefonda / Tashqi:     {config.ADMIN_TUNNEL_URL}/admin")
+    print("🔑 Kirish:                 Login: admin | Parol: wallstreet2026")
+    print("=" * 65 + "\n")
 
     # Bot ishga tushganida adminlarga xabar berish
     for admin_id in ADMINS:
@@ -91,9 +142,11 @@ async def main():
                 await bot.send_message(
                     chat_id=admin_id,
                     text=(
-                        "🚀 <b>Wall Street EduBot & Web App muvaffaqiyatli ishga tushdi!</b>\n\n"
-                        f"🌐 <b>Admin CMS Paneli:</b> <code>http://localhost:{WEB_PORT}/admin</code>\n"
-                        f"📱 <b>Web App manzili:</b> <code>{WEBAPP_BASE_URL}</code>"
+                        "🚀 <b>Wall Street EduBot & Admin Panel muvaffaqiyatli ishga tushdi!</b>\n\n"
+                        f"💻 <b>Admin Panel (Kompyuterda):</b> <code>http://localhost:{WEB_PORT}/admin</code>\n"
+                        f"📱 <b>Admin Panel (Telefonda):</b> <code>{config.ADMIN_TUNNEL_URL}/admin</code>\n"
+                        f"🌐 <b>Foydalanuvchi Web App:</b> <code>{WEBAPP_BASE_URL}</code>\n\n"
+                        "🔑 <i>Login: admin | Parol: wallstreet2026</i>"
                     ),
                     parse_mode="HTML"
                 )
@@ -108,6 +161,11 @@ async def main():
     finally:
         reminder_task.cancel()
         web_server_task.cancel()
+        if cloudflared_process and cloudflared_process.poll() is None:
+            try:
+                cloudflared_process.terminate()
+            except Exception:
+                pass
         await bot.session.close()
 
 if __name__ == "__main__":

@@ -89,11 +89,11 @@ def get_manager_lead_kb(telegram_id: int, phone: str = "") -> InlineKeyboardMark
     ])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-from config import WEBAPP_BASE_URL, ADMIN_TUNNEL_URL
+import config
 
 def get_admin_panel_kb(user_id: int = 0) -> InlineKeyboardMarkup:
     """Rahbar va Admin boshqaruv paneli (Web App bilan)"""
-    admin_webapp_url = f"{ADMIN_TUNNEL_URL}/admin?uid={user_id}"
+    admin_webapp_url = f"{config.ADMIN_TUNNEL_URL}/admin?uid={user_id}"
 
     buttons = [
         [

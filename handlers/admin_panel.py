@@ -3,7 +3,8 @@ from aiogram import Router, types, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import BufferedInputFile, InlineKeyboardMarkup, InlineKeyboardButton
 from database import Database
-from config import ADMINS, MANAGER_GROUP_ID, ADMIN_TUNNEL_URL
+import config
+from config import ADMINS, MANAGER_GROUP_ID
 from keyboards.inline_kb import (
     get_admin_panel_kb,
     get_admin_users_kb,
@@ -29,7 +30,7 @@ async def show_admin_panel(message: types.Message, db: Database):
         "statistika va xabarnomalarni real vaqtda boshqarishingiz mumkin.\n\n"
         "🌐 <b>Brauzerda kirish havolalari:</b>\n"
         "• Kompyuterda: <code>http://localhost:8000/admin</code>\n"
-        f"• Telefonda / Tashqi: <code>{ADMIN_TUNNEL_URL}/admin</code>\n\n"
+        f"• Telefonda / Tashqi: <code>{config.ADMIN_TUNNEL_URL}/admin</code>\n\n"
         "🔑 <b>Kirish ma'lumotlari:</b>\n"
         "• Login: <code>admin</code>\n"
         "• Parol: <code>wallstreet2026</code>\n\n"
@@ -46,7 +47,7 @@ async def refresh_admin_panel(call: types.CallbackQuery, db: Database):
         "💼 <b>Rahbar & Reception Boshqaruv Markazi (Yangilandi)</b>\n\n"
         "🌐 <b>Brauzerda kirish havolalari:</b>\n"
         "• Kompyuterda: <code>http://localhost:8000/admin</code>\n"
-        f"• Telefonda / Tashqi: <code>{ADMIN_TUNNEL_URL}/admin</code>\n\n"
+        f"• Telefonda / Tashqi: <code>{config.ADMIN_TUNNEL_URL}/admin</code>\n\n"
         "🔑 <b>Kirish ma'lumotlari:</b>\n"
         "• Login: <code>admin</code> | Parol: <code>wallstreet2026</code>"
     )

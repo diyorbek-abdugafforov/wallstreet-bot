@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wall Street - Reception & CMS Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #090d16;
+      color: #f8fafc;
+    }
+    .card-dark {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    .card-dark:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .tab-active {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 15px -2px rgba(37, 99, 235, 0.4);
+    }
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #374151; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed top-5 right-5 z-50 transform transition-all duration-300 translate-y-[-20px] opacity-0 pointer-events-none">
+    <div class="px-4 py-3 rounded-2xl bg-emerald-500 text-slate-950 font-black text-xs shadow-2xl flex items-center gap-2">
+      <span class="text-base">✅</span>
+      <span id="toast-text">Muvaffaqiyatli saqlandi!</span>
+    </div>
+  </div>
+
+  <!-- YUQORI HEADER -->
+  <header class="bg-[#0f172a]/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 md:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-lg shadow-lg shadow-blue-500/20">
+        WS
+      </div>
+      <div>
+        <h1 class="text-base font-black text-white tracking-tight flex items-center gap-2">
+          Wall Street CMS <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-extrabold uppercase">Admin Portal</span>
+        </h1>
+        <p class="text-[11px] text-slate-400">Reception & O'quvchilar Boshqaruv Markazi</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <!-- Excel Yuklash -->
+      <a href="/admin/api/export-excel" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-2 transition">
+        <span>📥 Excel Yuklab Olish</span>
+      </a>
+      
+      <!-- Tizim holati -->
+      <span class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Server Faol
+      </span>
+
+      <!-- Chiqish -->
+      <a href="/admin/logout" class="px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-bold border border-rose-500/30 flex items-center gap-1.5 transition">
+        <span>Chiqish</span> 🚪
+      </a>
+    </div>
+  </header>
+
+  <!-- ASOSIY KONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- TAB TUGMALARI -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800 text-xs font-bold">
+      <button onclick="switchTab('leads')" id="tab-btn-leads" class="px-4 py-2.5 rounded-xl tab-active whitespace-nowrap transition flex items-center gap-1.5">
+        <span>👥</span> Arizalar & Lidlar <span class="px-2 py-0.5 rounded-full bg-white/20 text-[10px]">{{ students|length }}</span>
+      </button>
+      <button onclick="switchTab('courses')" id="tab-btn-courses" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>📚</span> Kurslar & Narxlar <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px]">{{ courses|length }}</span>
+      </button>
+      <button onclick="switchTab('schedule')" id="tab-btn-schedule" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>🕒</span> Guruh Jadvallari <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px]">{{ schedules|length }}</span>
+      </button>
+      <button onclick="switchTab('events')" id="tab-btn-events" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>🎟</span> Tadbirlar & E'lonlar <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px]">{{ events|length }}</span>
+      </button>
+      <button onclick="switchTab('results')" id="tab-btn-results" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>🏆</span> Natijalar <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px]">{{ results|length }}</span>
+      </button>
+      <button onclick="switchTab('placement')" id="tab-btn-placement" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>📝</span> Daraja Testi Savollari <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px]">{{ placement_test|length }}</span>
+      </button>
+      <button onclick="switchTab('admins')" id="tab-btn-admins" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>👤</span> Adminlar <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px]">{{ admins|length }}</span>
+      </button>
+      <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-4 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 whitespace-nowrap transition flex items-center gap-1.5">
+        <span>⚙️</span> Sozlamalar & Promokodlar
+      </button>
+    </div>
+
+    <!-- 1. TAB: ARIZALAR VA LIDLAR (CRM PANEL) -->
+    <section id="tab-leads" class="space-y-5">
+      
+      <!-- 4 TA KPI STATISTIKA KARTALARI -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div class="card-dark rounded-2xl p-4 relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs text-slate-400 font-bold mb-1">
+            <span>Jami Lidlar</span>
+            <span class="text-blue-400 text-base">👥</span>
+          </div>
+          <span class="text-2xl font-black text-white" id="stat-total">{{ students|length }}</span>
+          <p class="text-[10px] text-slate-500 mt-1">Barcha yig'ilgan arizalar</p>
+        </div>
+
+        <div class="card-dark rounded-2xl p-4 relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs text-slate-400 font-bold mb-1">
+            <span>Yangi Arizalar</span>
+            <span class="text-amber-400 text-base">⏳</span>
+          </div>
+          {% set new_leads = students | selectattr('status', 'equalto', 'Yangi') | list %}
+          <span class="text-2xl font-black text-amber-400">{{ new_leads|length }}</span>
+          <p class="text-[10px] text-amber-500/80 mt-1">Qo'ng'iroq kutilayotganlar</p>
+        </div>
+
+        <div class="card-dark rounded-2xl p-4 relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs text-slate-400 font-bold mb-1">
+            <span>Sinov Darsiga</span>
+            <span class="text-purple-400 text-base">📅</span>
+          </div>
+          {% set trial_leads = students | selectattr('status', 'equalto', 'Sinov darsiga yozildi') | list %}
+          <span class="text-2xl font-black text-purple-400">{{ trial_leads|length }}</span>
+          <p class="text-[10px] text-slate-500 mt-1">1-darsga belgilangan</p>
+        </div>
+
+        <div class="card-dark rounded-2xl p-4 relative overflow-hidden">
+          <div class="flex items-center justify-between text-xs text-slate-400 font-bold mb-1">
+            <span>Guruhga Qo'shildi</span>
+            <span class="text-emerald-400 text-base">🎉</span>
+          </div>
+          {% set won_leads = students | selectattr('status', 'equalto', "Guruhga qo'shildi") | list %}
+          <span class="text-2xl font-black text-emerald-400">{{ won_leads|length }}</span>
+          <p class="text-[10px] text-emerald-500/80 mt-1">Muvaffaqiyatli konversiya</p>
+        </div>
+      </div>
+
+      <!-- QIDIRUV VA FILTRLAR PANELI -->
+      <div class="card-dark rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+        <!-- Qidiruv maydoni -->
+        <div class="relative flex-1 min-w-[240px]">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+          <input 
+            type="text" 
+            id="leads-search" 
+            oninput="filterLeadsTable()" 
+            placeholder="O'quvchi ismi, telefon raqami yoki darajasi bo'yicha qidirish..." 
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700/80 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+          >
+        </div>
+
+        <!-- Status bo'yicha tezkor filtrlar -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-bold">
+          <button onclick="setStatusFilter('ALL', this)" class="status-filter-btn px-3 py-1.5 rounded-xl bg-blue-600 text-white transition">Barchasi</button>
+          <button onclick="setStatusFilter('Yangi', this)" class="status-filter-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition">⏳ Yangi</button>
+          <button onclick="setStatusFilter('Bog\'lanildi', this)" class="status-filter-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition">📞 Bog'lanildi</button>
+          <button onclick="setStatusFilter('Sinov darsiga yozildi', this)" class="status-filter-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition">📅 Sinov Darsi</button>
+          <button onclick="setStatusFilter('Guruhga qo\'shildi', this)" class="status-filter-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition">🎉 Qo'shildi</button>
+          <button onclick="setStatusFilter('Rad etildi', this)" class="status-filter-btn px-3 py-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white transition">❌ Rad</button>
+        </div>
+      </div>
+
+      <!-- ARIZALAR JADVALI -->
+      <div class="card-dark rounded-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300" id="leads-table">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] font-black tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="p-3.5">O'quvchi F.I.O</th>
+                <th class="p-3.5">Telefon Raqam</th>
+                <th class="p-3.5">Daraja / Ball</th>
+                <th class="p-3.5">Test Urinishlari</th>
+                <th class="p-3.5">Manba (UTM)</th>
+                <th class="p-3.5">Status Boshqaruvi</th>
+                <th class="p-3.5">Izoh</th>
+                <th class="p-3.5">Sana</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80">
+              {% for s in students %}
+              <tr class="lead-row hover:bg-slate-800/40 transition" 
+                  data-name="{{ (s.full_name or '') | lower }}" 
+                  data-phone="{{ s.phone or '' }}" 
+                  data-level="{{ (s.level or '') | lower }}" 
+                  data-status="{{ s.status or 'Yangi' }}">
+                <td class="p-3.5">
+                  <div class="font-extrabold text-white">{{ s.full_name or "Noma'lum" }}</div>
+                  {% if s.username %}
+                  <a href="https://t.me/{{ s.username }}" target="_blank" class="text-[10px] text-blue-400 hover:underline">@{{ s.username }}</a>
+                  {% else %}
+                  <span class="text-[10px] text-slate-500">ID: {{ s.telegram_id }}</span>
+                  {% endif %}
+                </td>
+                <td class="p-3.5">
+                  {% if s.phone %}
+                  <a href="tel:{{ s.phone }}" class="font-mono text-emerald-400 font-extrabold hover:underline flex items-center gap-1">
+                    <span>📞</span> {{ s.phone }}
+                  </a>
+                  {% else %}
+                  <span class="text-slate-500">-</span>
+                  {% endif %}
+                </td>
+                <td class="p-3.5">
+                  <span class="px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 font-bold text-[11px] border border-blue-500/30">{{ s.level or '-' }}</span>
+                  <div class="text-[10px] text-slate-400 mt-1">{{ s.test_score or 0 }} ball</div>
+                </td>
+                <td class="p-3.5">
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-slate-800 text-amber-300 border border-slate-700">{{ s.test_attempts_used or 0 }} / {{ s.test_attempts_allowed or 1 }}</span>
+                    <button type="button" data-name="{{ s.full_name or 'O\'quvchi' }}" onclick="openGrantModal({{ s.telegram_id }}, this.getAttribute('data-name'))" class="p-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[10px] font-bold border border-blue-500/30 transition" title="Urinish qo'shish">➕</button>
+                  </div>
+                </td>
+                <td class="p-3.5 font-mono text-[11px] text-slate-400">
+                  <span class="px-2 py-0.5 rounded bg-slate-800/80">{{ s.utm_source or 'organic' }}</span>
+                </td>
+                <td class="p-3.5">
+                  <!-- AJAX Status Dropdown -->
+                  <select 
+                    onchange="changeLeadStatus({{ s.telegram_id }}, this.value, this)" 
+                    class="p-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-white focus:outline-none focus:border-blue-500">
+                    <option value="Yangi" {% if s.status == 'Yangi' or not s.status %}selected{% endif %}>⏳ Yangi</option>
+                    <option value="Bog'lanildi" {% if s.status == "Bog'lanildi" %}selected{% endif %}>📞 Bog'lanildi</option>
+                    <option value="Sinov darsiga yozildi" {% if s.status == 'Sinov darsiga yozildi' %}selected{% endif %}>📅 Sinov darsiga</option>
+                    <option value="Guruhga qo'shildi" {% if s.status == "Guruhga qo'shildi" %}selected{% endif %}>🎉 Guruhga qo'shildi</option>
+                    <option value="Rad etildi" {% if s.status == 'Rad etildi' %}selected{% endif %}>❌ Rad etildi</option>
+                  </select>
+                </td>
+                <td class="p-3.5">
+                  <div class="flex items-center gap-1">
+                    <span id="note-text-{{ s.telegram_id }}" class="text-[11px] text-slate-300 max-w-[120px] truncate block">{{ s.manager_note or '-' }}</span>
+                    <button onclick="editNote({{ s.telegram_id }})" class="text-xs text-slate-400 hover:text-white p-1" title="Izoh yozish">✏️</button>
+                  </div>
+                </td>
+                <td class="p-3.5 text-[11px] text-slate-400 whitespace-nowrap">
+                  {{ s.registered_at }}
+                </td>
+              </tr>
+              {% else %}
+              <tr id="no-leads-row"><td colspan="8" class="p-8 text-center text-slate-500">Hozircha kelib tushgan arizalar mavjud emas.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 2. TAB: KURSLAR VA NARXLAR BOSHQARUVI -->
+    <section id="tab-courses" class="space-y-5 hidden">
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3 flex items-center gap-2">
+          <span>➕</span> Yangi Kurs Qo'shish
+        </h3>
+        <form action="/admin/api/add-course" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Kurs nomi:</label>
+            <input type="text" name="name" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Masalan: IELTS 7.5+ Target">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Oylik narxi (faqat miqdor):</label>
+            <div class="relative flex items-center">
+              <input type="text" name="price" required class="w-full p-2.5 pr-24 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="Masalan: 850 000">
+              <span class="absolute right-2 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold border border-slate-700 pointer-events-none">so'm / oy</span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Davomiyligi:</label>
+            <input type="text" name="duration" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="3 oy intensiv">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Belgi (Badge):</label>
+            <input type="text" name="badge" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Ommabop / Top Kurs">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-slate-400 mb-1">Tavsif (Description):</label>
+            <input type="text" name="description" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Kurs haqida qisqacha ma'lumot...">
+          </div>
+          <div class="md:col-span-3">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">Kursni Saqlash</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for c in courses %}
+        <div class="card-dark rounded-2xl p-4 flex flex-col justify-between gap-3">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <h4 class="text-sm font-black text-white">{{ c.name }}</h4>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">{{ c.badge }}</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">{{ c.description }}</p>
+          </div>
+          <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+            <div>
+              <span class="text-slate-400 text-[11px] block">⏳ {{ c.duration }}</span>
+              <span class="text-emerald-400 font-black text-sm">{{ c.price }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openEditCourseModal({{ c.id }}, '{{ c.name|replace("'", "\\'") }}', '{{ c.price|replace("'", "\\'") }}', '{{ c.duration|replace("'", "\\'") }}', '{{ c.badge|replace("'", "\\'") }}', '{{ (c.description or '')|replace("'", "\\'") }}')" class="px-3 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 text-xs font-bold border border-blue-500/30">
+                Tahrirlash ✏️
+              </button>
+              <form action="/admin/api/delete-course" method="POST" onsubmit="return confirm('Ushbu kursni o\'chirmoqchimisiz?')">
+                <input type="hidden" name="id" value="{{ c.id }}">
+                <button type="submit" class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold border border-rose-500/30">
+                  O'chirish 🗑
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- 3. TAB: NATIJALAR BOSHQARUVI -->
+    <section id="tab-results" class="space-y-5 hidden">
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3 flex items-center gap-2">
+          <span>➕</span> Yangi O'quvchi Natijasi Qo'shish
+        </h3>
+        <form action="/admin/api/add-result" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">O'quvchi F.I.O:</label>
+            <input type="text" name="student_name" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Azizbek Rahimov">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Ball / Sertifikat nomi:</label>
+            <input type="text" name="score" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="IELTS 8.0 yoki CEFR C1">
+          </div>
+
+          <!-- KOMPYUTER / TELEFONDAN RASM YUKLASH BLOKI -->
+          <div class="md:col-span-2">
+            <label class="block text-slate-300 font-bold mb-1.5 flex items-center justify-between">
+              <span>🖼 O'quvchi surati yoki Sertifikat rasmini tanlash:</span>
+              <span class="text-[10px] text-amber-400 font-normal">Kompyuter yoki galereyadan</span>
+            </label>
+            
+            <div onclick="document.getElementById('result-image-file').click()" class="border-2 border-dashed border-slate-700 hover:border-amber-500 rounded-2xl p-4 text-center cursor-pointer bg-slate-900/60 hover:bg-slate-900/90 transition flex flex-col items-center justify-center gap-2 group">
+              <input type="file" id="result-image-file" name="image_file" accept="image/*" class="hidden" onchange="previewUploadImage(event)">
+              
+              <div id="upload-placeholder" class="space-y-1">
+                <span class="text-3xl group-hover:scale-110 transition inline-block">📸</span>
+                <p class="text-xs font-bold text-white">Rasm yuklash uchun bu yerga bosing</p>
+                <p class="text-[10px] text-slate-400">Kompyuteringizdagi rasm faylini tanlang (JPG, PNG, WEBP)</p>
+              </div>
+
+              <div id="upload-preview-wrap" class="hidden flex items-center gap-3 w-full p-2.5 bg-slate-800/90 rounded-xl border border-amber-500/40">
+                <img id="upload-preview-img" src="" class="w-16 h-16 rounded-xl object-cover border border-amber-500/60 shadow-md">
+                <div class="text-left flex-1 min-w-0">
+                  <span id="upload-file-name" class="text-xs font-bold text-white truncate block"></span>
+                  <span class="text-[10px] text-emerald-400 font-semibold block mt-0.5">✓ Rasm muvaffaqiyatli tanlandi</span>
+                </div>
+                <button type="button" onclick="event.stopPropagation(); removeSelectedImage();" class="px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white text-xs font-bold transition">Bekor qilish</button>
+              </div>
+            </div>
+
+            <details class="mt-2 text-[11px] text-slate-400">
+              <summary class="cursor-pointer hover:text-slate-300">Yoki rasm URL manzilini qo'lda kiritish (Ixtiyoriy)</summary>
+              <input type="url" name="image_url" id="result-image-url" class="mt-1.5 w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs" placeholder="https://images.unsplash.com/...">
+            </details>
+          </div>
+
+          <div>
+            <label class="block text-slate-400 mb-1">Tafsilotlar (Sub-scores):</label>
+            <input type="text" name="details" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Listening: 8.5, Reading: 8.5, Writing: 7.0, Speaking: 7.5">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Muvaffaqiyat tarixi / Izoh:</label>
+            <input type="text" name="description" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="4 oylik IELTS kursida erishildi...">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">📱 Telegram Post havolasi (Ixtiyoriy):</label>
+            <input type="url" name="telegram_post_url" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="https://t.me/kanal_nomi/123">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">🎬 Video sharh havolasi (Ixtiyoriy):</label>
+            <input type="url" name="video_url" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="https://youtube.com/watch?v=...">
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition">Natijani Saqlash</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for r in results %}
+        <div class="card-dark rounded-2xl p-4 flex gap-4 items-start">
+          <img src="{{ r.image_url }}" class="w-20 h-20 rounded-xl object-cover border border-slate-700 flex-shrink-0 shadow-md">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between mb-1">
+              <h4 class="text-xs font-black text-white truncate">{{ r.student_name }}</h4>
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">{{ r.score }}</span>
+            </div>
+            <p class="text-[11px] text-slate-300 font-semibold mb-1">{{ r.details }}</p>
+            <p class="text-[10px] text-slate-400 leading-tight mb-2">{{ r.description }}</p>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800 text-[10px]">
+              <div class="flex gap-2">
+                {% if r.telegram_post_url %}
+                <a href="{{ r.telegram_post_url }}" target="_blank" class="text-blue-400 hover:underline">📱 Post</a>
+                {% endif %}
+                {% if r.video_url %}
+                <a href="{{ r.video_url }}" target="_blank" class="text-red-400 hover:underline">🎬 Video</a>
+                {% endif %}
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="openEditResultModal({{ r.id }}, '{{ r.student_name|replace("'", "\\'") }}', '{{ r.score|replace("'", "\\'") }}', '{{ (r.details or '')|replace("'", "\\'") }}', '{{ (r.description or '')|replace("'", "\\'") }}', '{{ (r.telegram_post_url or '')|replace("'", "\\'") }}', '{{ (r.video_url or '')|replace("'", "\\'") }}', '{{ r.image_url|replace("'", "\\'") }}')" class="text-blue-400 hover:underline font-bold">
+                  Tahrirlash ✏️
+                </button>
+                <form action="/admin/api/delete-result" method="POST" onsubmit="return confirm('O\'chirmoqchimisiz?')">
+                  <input type="hidden" name="id" value="{{ r.id }}">
+                  <button type="submit" class="text-rose-400 hover:underline font-bold">O'chirish 🗑</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- 4. TAB: DARAJA TESTI SAVOLLARI -->
+    <section id="tab-placement" class="space-y-5 hidden">
+      <!-- EXCEL SHABLON VA OMMAVIY YUKLASH KARTASI -->
+      <div class="card-dark rounded-2xl p-5 border border-emerald-500/20 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/20 shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-lg border border-emerald-500/30">📊</span>
+              <div>
+                <h3 class="text-sm font-black text-white">Excel Orqali Ommaviy Test Yuklash & Shablon</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Savollarni Excel dasturida to'ldiring va bitta tugma bilan sayt hamda botdagi testlarni yangilang</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <a href="/admin/api/download-test-template" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5">
+              <span>📥</span> Excel Shablonni Yuklab Olish (.xlsx)
+            </a>
+          </div>
+        </div>
+
+        <!-- YUKLASH FORMASI -->
+        <form action="/admin/api/upload-test-excel" method="POST" enctype="multipart/form-data" class="mt-4 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+          <div class="flex-1">
+            <label class="block text-[11px] font-bold text-slate-300 mb-1.5">To'ldirilgan Excel faylni tanlang (.xlsx):</label>
+            <input type="file" name="excel_file" accept=".xlsx,.xls" required class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-600 file:text-white hover:file:bg-blue-500 bg-slate-950/80 border border-slate-700 rounded-xl p-1.5 cursor-pointer">
+          </div>
+          <div class="md:self-end">
+            <button type="submit" class="w-full md:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+              <span>📤</span> Testlarni Saytga Joylash (Yuklash)
+            </button>
+          </div>
+        </form>
+        
+        <div class="mt-3 p-3 rounded-xl bg-slate-950/50 border border-slate-800 text-[11px] text-slate-400 flex items-start gap-2">
+          <span class="text-amber-400">💡</span>
+          <span><b>Qo'llanma:</b> Avval "Excel Shablonni Yuklab Olish" tugmasi orqali namunani yuklab oling. Undagi <i>Savol matni</i>, <i>Variantlar (A, B, C, D)</i>, <i>To'g'ri javob</i> (A, B, C yoki D) va <i>Daraja</i> ustunlarini to'ldirib, shu yerga yuklang. Saytdagi testlar shu zahotiyoq yangilanadi.</span>
+        </div>
+      </div>
+
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3">➕ Yangi Savol Qo'shish (Placement Test)</h3>
+        <form action="/admin/api/add-placement-q" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div class="md:col-span-2">
+            <label class="block text-slate-400 mb-1">Savol matni:</label>
+            <input type="text" name="question" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Masalan: She _______ to school every day.">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">A varianti:</label>
+            <input type="text" name="opt0" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">B varianti:</label>
+            <input type="text" name="opt1" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">C varianti:</label>
+            <input type="text" name="opt2" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">D varianti:</label>
+            <input type="text" name="opt3" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">To'g'ri javob:</label>
+            <select name="answer" class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+              <option value="0">A varianti</option>
+              <option value="1">B varianti</option>
+              <option value="2">C varianti</option>
+              <option value="3">D varianti</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Daraja (Level):</label>
+            <select name="level" class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+              <option value="Beginner">Beginner</option>
+              <option value="Elementary">Elementary</option>
+              <option value="Pre-Intermediate">Pre-Intermediate</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Upper-Intermediate">Upper-Intermediate</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">Savolni Saqlash</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="space-y-3">
+        {% for q in placement_test %}
+        <div class="card-dark rounded-xl p-4 flex justify-between items-start gap-3">
+          <div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">{{ q.level }}</span>
+            <p class="text-xs font-bold text-white mt-1.5">{{ q.question }}</p>
+            <div class="flex flex-wrap gap-2 mt-2 text-[11px] text-slate-400">
+              {% for opt in q.options %}
+              <span class="px-2 py-0.5 rounded bg-slate-900 {% if loop.index0 == q.answer %}text-emerald-400 font-bold border border-emerald-500/40{% endif %}">
+                {{ opt }}
+              </span>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <button type="button" onclick="openEditPlacementModal({{ q.id }}, '{{ q.question|replace("'", "\\'") }}', '{{ q.options[0]|replace("'", "\\'") }}', '{{ q.options[1]|replace("'", "\\'") }}', '{{ q.options[2]|replace("'", "\\'") }}', '{{ q.options[3]|replace("'", "\\'") }}', {{ q.answer }})" class="text-blue-400 hover:text-blue-300 text-xs p-1 font-bold">✏️</button>
+            <form action="/admin/api/delete-placement-q" method="POST" onsubmit="return confirm('O\'chirmoqchimisiz?')">
+              <input type="hidden" name="id" value="{{ q.id }}">
+              <button type="submit" class="text-rose-400 hover:text-rose-300 text-xs p-1">🗑</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- 5. TAB: ADMINLARNI BOSHQARISH -->
+    <section id="tab-admins" class="space-y-5 hidden">
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3">➕ Yangi Admin / Receptionist Qo'shish</h3>
+        <form action="/admin/api/add-admin" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Telegram ID raqami:</label>
+            <input type="number" name="telegram_id" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono" placeholder="6262775861">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">F.I.O / Lavozimi:</label>
+            <input type="text" name="full_name" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Nodira Aliyeva (Reception)">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Roli:</label>
+            <select name="role" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+              <option value="admin">Administrator</option>
+              <option value="manager">Menejer / Reception</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">Adminni Biriktirish</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {% for a in admins %}
+        <div class="card-dark rounded-xl p-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-black">
+              👤
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white">{{ a.full_name }}</h4>
+              <p class="text-[10px] font-mono text-slate-400">ID: {{ a.telegram_id }} ({{ a.role }})</p>
+            </div>
+          </div>
+          <form action="/admin/api/delete-admin" method="POST" onsubmit="return confirm('Ushbu adminni o\'chirmoqchimisiz?')">
+            <input type="hidden" name="telegram_id" value="{{ a.telegram_id }}">
+            <button type="submit" class="px-3 py-1 rounded-xl bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30">O'chirish</button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- 6. TAB: SOZLAMALAR VA PROMOKODLAR -->
+    <section id="tab-settings" class="space-y-5 hidden">
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3">🏢 Reception Kontaktlari va Manzili</h3>
+        <form action="/admin/api/update-settings" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Asosiy telefon raqam:</label>
+            <input type="text" name="reception_phone" value="{{ settings.reception_phone }}" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Qo'shimcha telefon raqam:</label>
+            <input type="text" name="reception_additional_phone" value="{{ settings.reception_additional_phone }}" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-slate-400 mb-1">Markaz manzili:</label>
+            <input type="text" name="location_address" value="{{ settings.location_address }}" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+          </div>
+          <div class="md:col-span-2">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">Sozlamalarni Saqlash</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3">🎁 Yangi Chegirma Promokodi Yaratish</h3>
+        <form action="/admin/api/add-promocode" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Promokod kodi:</label>
+            <input type="text" name="code" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono uppercase" placeholder="KUZ2026">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Chegirma turi:</label>
+            <input type="text" name="discount" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="15% chegirma">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Izoh:</label>
+            <input type="text" name="description" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Kuzgi qabul uchun">
+          </div>
+          <div class="md:col-span-3">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition">Promokodni Faollashtirish</button>
+          </div>
+        </form>
+      </div>
+
+      {% if settings.promocodes %}
+      <div class="card-dark rounded-2xl p-5">
+        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Faol Promokodlar</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {% for p in settings.promocodes %}
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="font-mono text-xs font-bold text-amber-400">{{ p.code }}</span>
+              <span class="text-[11px] text-emerald-400 font-semibold block">{{ p.discount }}</span>
+              {% if p.description %}<p class="text-[10px] text-slate-400">{{ p.description }}</p>{% endif %}
+            </div>
+            <form action="/admin/api/delete-promocode" method="POST" onsubmit="return confirm('Promokodni o\'chirmoqchimisiz?')">
+              <input type="hidden" name="code" value="{{ p.code }}">
+              <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 text-xs font-bold hover:bg-rose-500 hover:text-white transition">O'chirish 🗑</button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- 7. TAB: GURUH JADVALLARI BOSHQARUVI -->
+    <section id="tab-schedule" class="space-y-5 hidden">
+      <!-- Yangi guruh qo'shish kartasi -->
+      <div class="card-dark rounded-2xl p-5">
+        <h3 class="text-sm font-black text-white mb-3 flex items-center gap-2">
+          <span>➕</span> Yangi Guruh Jadvalini Qo'shish
+        </h3>
+        <form action="/admin/api/add-schedule" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Guruh turi:</label>
+            <input type="text" name="type" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="Masalan: Ertalabki guruh">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Darajasi (Level):</label>
+            <input type="text" name="level" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="Masalan: Beginner / Elementary">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Hafta kunlari:</label>
+            <select name="days" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+              <option value="Dushanba - Chorshanba - Juma">Dushanba - Chorshanba - Juma</option>
+              <option value="Seshanba - Payshanba - Shanba">Seshanba - Payshanba - Shanba</option>
+              <option value="Har kuni (Intensiv)">Har kuni (Intensiv)</option>
+              <option value="Dam olish kunlari (Shanba-Yakshanba)">Dam olish kunlari (Shanba-Yakshanba)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Dars vaqti:</label>
+            <input type="text" name="time" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="Masalan: 09:00 - 10:30">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Hozirgi o'quvchilar soni:</label>
+            <input type="number" name="current_students" value="0" min="0" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Maksimal joy (sig'im):</label>
+            <input type="number" name="max_students" value="12" min="1" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+          </div>
+          <div class="md:col-span-3 flex justify-end pt-2 border-t border-slate-800">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition">Guruh Jadvalini Saqlash ✅</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Guruhlar jadvali -->
+      <div class="card-dark rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 class="text-sm font-black text-white flex items-center gap-2">
+            <span>📋</span> Barcha Guruhlar va O'rinlar Bandligi
+          </h3>
+          <span class="text-xs text-slate-400">Jami: {{ schedules|length }} ta guruh</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] font-black tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="p-3.5">ID</th>
+                <th class="p-3.5">Guruh Nomi / Turi</th>
+                <th class="p-3.5">Daraja</th>
+                <th class="p-3.5">Kunlar & Vaqt</th>
+                <th class="p-3.5">Bandlik (O'quvchilar)</th>
+                <th class="p-3.5">Holati</th>
+                <th class="p-3.5 text-right">Amallar</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80">
+              {% for s in schedules %}
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="p-3.5 font-mono text-slate-500">#{{ s.id }}</td>
+                <td class="p-3.5 font-bold text-white">{{ s.type }}</td>
+                <td class="p-3.5">
+                  <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[11px] font-bold">{{ s.level }}</span>
+                </td>
+                <td class="p-3.5">
+                  <div class="font-semibold text-white">{{ s.days }}</div>
+                  <div class="text-[10px] text-slate-400 font-mono mt-0.5">⏰ {{ s.time }}</div>
+                </td>
+                <td class="p-3.5">
+                  <div class="flex items-center gap-2">
+                    <span class="font-black text-xs {% if s.current_students >= s.max_students %}text-rose-400{% else %}text-emerald-400{% endif %}">
+                      {{ s.current_students }} / {{ s.max_students }} ta
+                    </span>
+                    {% set pct = ((s.current_students / s.max_students) * 100) if s.max_students > 0 else 0 %}
+                    <div class="w-16 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div class="h-1.5 rounded-full {% if pct >= 100 %}bg-rose-500{% elif pct >= 75 %}bg-amber-400{% else %}bg-emerald-400{% endif %}" style="width: {{ [pct, 100] | min }}%"></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-3.5">
+                  {% if s.current_students >= s.max_students %}
+                  <span class="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-bold text-[10px] border border-rose-500/30">🚫 Guruh To'lgan</span>
+                  {% else %}
+                  <span class="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">✅ Qabul Ochiq ({{ s.max_students - s.current_students }} joy)</span>
+                  {% endif %}
+                </td>
+                <td class="p-3.5 text-right whitespace-nowrap">
+                  <div class="flex items-center justify-end gap-2">
+                    <button type="button" 
+                      data-id="{{ s.id }}" 
+                      data-type="{{ s.type }}" 
+                      data-level="{{ s.level }}" 
+                      data-days="{{ s.days }}" 
+                      data-time="{{ s.time }}" 
+                      data-current="{{ s.current_students }}" 
+                      data-max="{{ s.max_students }}" 
+                      onclick="openEditScheduleModal(this.dataset.id, this.dataset.type, this.dataset.level, this.dataset.days, this.dataset.time, this.dataset.current, this.dataset.max)" 
+                      class="px-2.5 py-1 rounded-lg bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white font-bold text-xs border border-blue-500/30 transition">✏️ Tahrirlash</button>
+                    <form action="/admin/api/delete-schedule" method="POST" onsubmit="return confirm('Ushbu guruh jadvalini o\'chirmoqchimisiz?')">
+                      <input type="hidden" name="id" value="{{ s.id }}">
+                      <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs border border-rose-500/30 transition">🗑 O'chirish</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="p-8 text-center text-slate-500">Hozircha guruh jadvallari mavjud emas.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. TAB: TADBIRLAR VA MASTER-KLASS E'LONLARI -->
+    <section id="tab-events" class="space-y-5 hidden">
+      <!-- Tadbir e'lon qilish kartasi -->
+      <div class="card-dark rounded-2xl p-5 border border-purple-500/30 bg-gradient-to-br from-slate-900 via-indigo-950/20 to-slate-900">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-black text-white flex items-center gap-2">
+            <span>📢</span> Yangi Tadbir / Master-Klass E'lon Qilish
+          </h3>
+          <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-extrabold uppercase border border-purple-500/30">Avto-Tarqatish (Broadcast)</span>
+        </div>
+        <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+          Tadbir yaratilishi bilanoq bot <b>barcha ro'yxatdan o'tgan o'quvchilarga</b> va <b>menejerlar guruhiga</b> to'g'ridan-to'g'ri chiroyli xabar va <b>"🎟 Ro'yxatdan o'tish"</b> inline tugmasi bilan yuboradi.
+        </p>
+        <form action="/admin/api/broadcast-event" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <div class="md:col-span-2">
+            <label class="block text-slate-400 mb-1">Tadbir nomi (Sarlavha):</label>
+            <input type="text" name="title" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="Masalan: IELTS 8.5 Speaking Masterclass & Mock Marathon">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Maksimal joylar soni:</label>
+            <input type="number" name="seats_limit" value="30" min="1" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Sanasi va vaqti:</label>
+            <input type="text" name="date_time" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="Masalan: Shanba, 16:00 (28-oktyabr)">
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-slate-400 mb-1">Tadbir tavsifi / Ma'lumot:</label>
+            <input type="text" name="description" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white" placeholder="Masterclassda nimalar bo'ladi, spiker kim va qanday foyda beradi...">
+          </div>
+          <div class="md:col-span-3 flex justify-end pt-2 border-t border-slate-800">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-500/25 transition">
+              📢 Barchaga E'lon Qilish & Tarqatish 🚀
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Faol tadbirlar jadvali -->
+      <div class="card-dark rounded-2xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 class="text-sm font-black text-white flex items-center gap-2">
+            <span>🎟</span> Faol Tadbirlar va Ro'yxatdan O'tgan Qatnashchilar
+          </h3>
+          <span class="text-xs text-slate-400">Jami: {{ events|length }} ta tadbir</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] font-black tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="p-3.5">ID</th>
+                <th class="p-3.5">Tadbir Nomi</th>
+                <th class="p-3.5">Sanasi & Vaqti</th>
+                <th class="p-3.5">Joylar Bandligi</th>
+                <th class="p-3.5">Qatnashchilar Ro'yxati</th>
+                <th class="p-3.5 text-right">Amallar</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80">
+              {% for e in events %}
+              <tr class="hover:bg-slate-800/40 transition">
+                <td class="p-3.5 font-mono text-slate-500">#{{ e.id }}</td>
+                <td class="p-3.5">
+                  <div class="font-extrabold text-white">{{ e.title }}</div>
+                  {% if e.description %}<p class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{{ e.description }}</p>{% endif %}
+                </td>
+                <td class="p-3.5 font-bold text-white">
+                  📅 {{ e.date_time }}
+                </td>
+                <td class="p-3.5">
+                  <span class="px-2.5 py-1 rounded-full font-black text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    {{ e.registered_count }} / {{ e.seats_limit }} ta qatnashchi
+                  </span>
+                </td>
+                <td class="p-3.5">
+                  <button type="button" data-title="{{ e.title }}" onclick="openEventParticipantsModal({{ e.id }}, this.getAttribute('data-title'))" class="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white font-bold text-xs border border-blue-500/30 transition flex items-center gap-1.5">
+                    <span>👥</span> Qatnashchilar ({{ e.registered_count }})
+                  </button>
+                </td>
+                <td class="p-3.5 text-right">
+                  <form action="/admin/api/delete-event" method="POST" onsubmit="return confirm('Ushbu tadbirni o\'chirmoqchimisiz?')">
+                    <input type="hidden" name="event_id" value="{{ e.id }}">
+                    <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white font-bold text-xs border border-rose-500/30 transition">🗑 O'chirish</button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="p-8 text-center text-slate-500">Hozircha faol tadbirlar mavjud emas. Yuqoridagi formadan yangi tadbir e'lon qilishingiz mumkin.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 1. KURSNI TAHRIRLASH MODALI -->
+  <div id="modal-edit-course" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card-dark rounded-3xl w-full max-w-lg p-6 space-y-4 relative border border-slate-700 shadow-2xl">
+      <button onclick="closeEditCourseModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-base">✕</button>
+      <h3 class="text-sm font-black text-white flex items-center gap-2">
+        <span>✏️</span> Kurs Ma'lumotlarini Tahrirlash
+      </h3>
+      <form action="/admin/api/edit-course" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <input type="hidden" name="id" id="edit-c-id">
+        <div class="md:col-span-2">
+          <label class="block text-slate-400 mb-1">Kurs nomi:</label>
+          <input type="text" name="name" id="edit-c-name" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Oylik narxi (faqat miqdor):</label>
+          <div class="relative flex items-center">
+            <input type="text" name="price" id="edit-c-price" required class="w-full p-2.5 pr-24 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold" placeholder="850 000">
+            <span class="absolute right-2 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400 text-xs font-bold border border-slate-700 pointer-events-none">so'm / oy</span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Davomiyligi:</label>
+          <input type="text" name="duration" id="edit-c-duration" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-slate-400 mb-1">Belgi (Badge):</label>
+          <input type="text" name="badge" id="edit-c-badge" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-slate-400 mb-1">Tavsif:</label>
+          <textarea name="description" id="edit-c-description" rows="2" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"></textarea>
+        </div>
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeEditCourseModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Bekor qilish</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold">O'zgarishlarni Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. NATIJANI TAHRIRLASH MODALI -->
+  <div id="modal-edit-result" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card-dark rounded-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-4 relative border border-slate-700 shadow-2xl">
+      <button onclick="closeEditResultModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-base">✕</button>
+      <h3 class="text-sm font-black text-white flex items-center gap-2">
+        <span>✏️</span> O'quvchi Natijasini Tahrirlash
+      </h3>
+      <form action="/admin/api/edit-result" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <input type="hidden" name="id" id="edit-r-id">
+        <div>
+          <label class="block text-slate-400 mb-1">O'quvchi F.I.O:</label>
+          <input type="text" name="student_name" id="edit-r-name" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Ball / Sertifikat:</label>
+          <input type="text" name="score" id="edit-r-score" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+
+        <!-- Rasm yangilash -->
+        <div class="md:col-span-2">
+          <label class="block text-slate-300 font-bold mb-1">Rasm (Yangi yuklash yoki eskisini qoldirish):</label>
+          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-900 border border-slate-800">
+            <img id="edit-r-current-img" src="" class="w-14 h-14 rounded-xl object-cover border border-slate-700 flex-shrink-0">
+            <div class="flex-1 min-w-0">
+              <span class="text-[11px] text-slate-400 block mb-1">Yangi rasm tanlash (Kompyuter yoki galereyadan):</span>
+              <input type="file" name="image_file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+            </div>
+          </div>
+          <input type="hidden" name="image_url" id="edit-r-image-url">
+        </div>
+
+        <div>
+          <label class="block text-slate-400 mb-1">Tafsilotlar (Sub-scores):</label>
+          <input type="text" name="details" id="edit-r-details" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Muvaffaqiyat tarixi / Izoh:</label>
+          <input type="text" name="description" id="edit-r-description" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">📱 Telegram Post havolasi:</label>
+          <input type="url" name="telegram_post_url" id="edit-r-tg-url" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">🎬 Video sharh havolasi:</label>
+          <input type="url" name="video_url" id="edit-r-video-url" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeEditResultModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Bekor qilish</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. PLACEMENT SAVOLINI TAHRIRLASH MODALI -->
+  <div id="modal-edit-placement" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card-dark rounded-3xl w-full max-w-lg p-6 space-y-4 relative border border-slate-700 shadow-2xl">
+      <button onclick="closeEditPlacementModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-base">✕</button>
+      <h3 class="text-sm font-black text-white flex items-center gap-2">
+        <span>✏️</span> Savolni Tahrirlash (Placement Test)
+      </h3>
+      <form action="/admin/api/edit-placement-q" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <input type="hidden" name="id" id="edit-q-id">
+        <div class="md:col-span-2">
+          <label class="block text-slate-400 mb-1">Savol matni:</label>
+          <input type="text" name="question" id="edit-q-question" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">A varianti:</label>
+          <input type="text" name="opt0" id="edit-q-opt0" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">B varianti:</label>
+          <input type="text" name="opt1" id="edit-q-opt1" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">C varianti:</label>
+          <input type="text" name="opt2" id="edit-q-opt2" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">D varianti:</label>
+          <input type="text" name="opt3" id="edit-q-opt3" required class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white">
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-slate-400 mb-1">To'g'ri javob:</label>
+          <select name="answer" id="edit-q-answer" class="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+            <option value="0">A varianti</option>
+            <option value="1">B varianti</option>
+            <option value="2">C varianti</option>
+            <option value="3">D varianti</option>
+          </select>
+        </div>
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeEditPlacementModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Bekor qilish</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  <!-- 4. URINISH QO'SHISH MODALI -->
+  <div id="modal-grant-attempt" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card-dark rounded-3xl w-full max-w-sm p-6 space-y-4 relative border border-slate-700 shadow-2xl">
+      <button onclick="closeGrantModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-base">✕</button>
+      <div class="flex items-center gap-2">
+        <span class="text-xl">➕</span>
+        <h3 class="text-sm font-black text-white">Test Topshirish Urinishi Berish</h3>
+      </div>
+      <form action="/admin/api/grant-attempt" method="POST" class="space-y-3.5 text-xs">
+        <input type="hidden" name="telegram_id" id="grant-telegram-id">
+        <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+          <span class="text-[10px] text-slate-400 block uppercase font-bold">O'quvchi:</span>
+          <b id="grant-student-name" class="text-white text-sm">O'quvchi</b>
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Qo'shiladigan urinishlar soni:</label>
+          <select name="count" class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+            <option value="1" selected>+1 ta imkoniyat</option>
+            <option value="2">+2 ta imkoniyat</option>
+            <option value="3">+3 ta imkoniyat</option>
+            <option value="5">+5 ta imkoniyat</option>
+          </select>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-relaxed">Ushbu o'quvchiga darhol yangi urinish beriladi va u Web Appda qayta test topshirishi mumkin bo'ladi.</p>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeGrantModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Bekor qilish</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold">Tasdiqlash ✅</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. GURUH JADVALINI TAHRIRLASH MODALI -->
+  <div id="modal-edit-schedule" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card-dark rounded-3xl w-full max-w-lg p-6 space-y-4 relative border border-slate-700 shadow-2xl">
+      <button onclick="closeEditScheduleModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-base">✕</button>
+      <h3 class="text-sm font-black text-white flex items-center gap-2">
+        <span>✏️</span> Guruh Jadvali va O'rinlarni Tahrirlash
+      </h3>
+      <form action="/admin/api/edit-schedule" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+        <input type="hidden" name="id" id="edit-s-id">
+        <div>
+          <label class="block text-slate-400 mb-1">Guruh turi:</label>
+          <input type="text" name="type" id="edit-s-type" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Darajasi (Level):</label>
+          <input type="text" name="level" id="edit-s-level" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Kunlari:</label>
+          <input type="text" name="days" id="edit-s-days" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Dars vaqti:</label>
+          <input type="text" name="time" id="edit-s-time" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Hozirgi o'quvchilar soni:</label>
+          <input type="number" name="current_students" id="edit-s-current" min="0" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Maksimal joy (sig'im):</label>
+          <input type="number" name="max_students" id="edit-s-max" min="1" required class="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold">
+        </div>
+        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeEditScheduleModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Bekor qilish</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold">Saqlash ✅</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. TADBIR QATNASHCHILARI RO'YXATI MODALI -->
+  <div id="modal-event-participants" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="card-dark rounded-3xl w-full max-w-xl max-h-[85vh] overflow-y-auto p-6 space-y-4 relative border border-slate-700 shadow-2xl">
+      <button onclick="closeEventParticipantsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-base">✕</button>
+      <div class="flex items-center gap-2">
+        <span class="text-xl">👥</span>
+        <div>
+          <h3 class="text-sm font-black text-white">Tadbirga Ro'yxatdan O'tgan Qatnashchilar</h3>
+          <p id="part-event-title" class="text-xs text-purple-400 font-bold"></p>
+        </div>
+      </div>
+      <div id="participants-loading" class="text-center py-6 text-xs text-slate-400">Yuklanmoqda...</div>
+      <div id="participants-table-wrap" class="hidden overflow-x-auto">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] font-black border-b border-slate-800">
+            <tr>
+              <th class="p-3">#</th>
+              <th class="p-3">F.I.O</th>
+              <th class="p-3">Telefon</th>
+              <th class="p-3">Telegram ID</th>
+              <th class="p-3">Sana</th>
+            </tr>
+          </thead>
+          <tbody id="participants-tbody" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+      <div class="flex justify-end pt-2 border-t border-slate-800">
+        <button type="button" onclick="closeEventParticipantsModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs">Yopish</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // TAB O'ZGARTIRISH
+    const allTabs = ['leads', 'courses', 'schedule', 'events', 'results', 'placement', 'admins', 'settings'];
+    function switchTab(tab) {
+      allTabs.forEach(t => {
+        const sec = document.getElementById('tab-' + t);
+        const btn = document.getElementById('tab-btn-' + t);
+        if (sec && btn) {
+          if (t === tab) {
+            sec.classList.remove('hidden');
+            btn.classList.add('tab-active');
+            btn.classList.remove('text-slate-400');
+          } else {
+            sec.classList.add('hidden');
+            btn.classList.remove('tab-active');
+            btn.classList.add('text-slate-400');
+          }
+        }
+      });
+    }
+
+    // TOAST DISPLAY
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-text').innerText = text;
+      toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-20px]', 'opacity-0');
+      }, 2500);
+    }
+
+    // AJAX STATUS O'ZGARTIRISH
+    async function changeLeadStatus(telegramId, newStatus, selectEl) {
+      try {
+        const res = await fetch('/admin/api/update-lead-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegram_id: telegramId, status: newStatus })
+        });
+        if (res.ok) {
+          showToast(`Status "${newStatus}" ga o'zgartirildi!`);
+          selectEl.closest('tr').setAttribute('data-status', newStatus);
+        } else {
+          alert("Statusni yangilashda xatolik yuz berdi.");
+        }
+      } catch(e) {
+        alert("Server bilan aloqa uzildi.");
+      }
+    }
+
+    // IZOH TAHRIRLASH
+    async function editNote(telegramId) {
+      const currentNote = document.getElementById(`note-text-${telegramId}`)?.innerText.trim();
+      const newNote = prompt("Ushbu o'quvchi uchun yangi izoh kiriting:", currentNote === '-' ? '' : currentNote);
+      if (newNote === null) return;
+
+      try {
+        const res = await fetch('/admin/api/update-lead-note', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegram_id: telegramId, note: newNote })
+        });
+        if (res.ok) {
+          document.getElementById(`note-text-${telegramId}`).innerText = newNote || '-';
+          showToast("Izoh saqlandi!");
+        }
+      } catch(e) {}
+    }
+
+    // QIDIRUV VA STATUS FILTRI
+    let activeStatusFilter = 'ALL';
+
+    function setStatusFilter(status, btn) {
+      activeStatusFilter = status;
+      document.querySelectorAll('.status-filter-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        b.classList.add('bg-slate-800', 'text-slate-400');
+      });
+      btn.classList.add('bg-blue-600', 'text-white');
+      btn.classList.remove('bg-slate-800', 'text-slate-400');
+      filterLeadsTable();
+    }
+
+    function filterLeadsTable() {
+      const query = document.getElementById('leads-search').value.toLowerCase().trim();
+      const rows = document.querySelectorAll('.lead-row');
+      let visibleCount = 0;
+
+      rows.forEach(r => {
+        const name = r.getAttribute('data-name') || '';
+        const phone = r.getAttribute('data-phone') || '';
+        const level = r.getAttribute('data-level') || '';
+        const status = r.getAttribute('data-status') || '';
+
+        const matchesQuery = !query || name.includes(query) || phone.includes(query) || level.includes(query);
+        const matchesStatus = (activeStatusFilter === 'ALL') || (status === activeStatusFilter);
+
+        if (matchesQuery && matchesStatus) {
+          r.style.display = '';
+          visibleCount++;
+        } else {
+          r.style.display = 'none';
+        }
+      });
+
+      const noRowsEl = document.getElementById('no-leads-row');
+      if (noRowsEl) {
+        noRowsEl.style.display = (visibleCount === 0) ? '' : 'none';
+      }
+    }
+
+    // RASM PREVIEW VA BEKOR QILISH LOGIKASI
+    function previewUploadImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const placeholder = document.getElementById('upload-placeholder');
+      const previewWrap = document.getElementById('upload-preview-wrap');
+      const previewImg = document.getElementById('upload-preview-img');
+      const fileName = document.getElementById('upload-file-name');
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        fileName.innerText = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        placeholder.classList.add('hidden');
+        previewWrap.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeSelectedImage() {
+      const input = document.getElementById('result-image-file');
+      input.value = '';
+      document.getElementById('upload-preview-img').src = '';
+      document.getElementById('upload-preview-wrap').classList.add('hidden');
+      document.getElementById('upload-placeholder').classList.remove('hidden');
+    }
+
+    // 1. KURSNI TAHRIRLASH
+    function openEditCourseModal(id, name, price, duration, badge, description) {
+      document.getElementById('edit-c-id').value = id;
+      document.getElementById('edit-c-name').value = name;
+      // 'so'm / oy' ni avtomatik olib tashlab, faqat toza miqdorni ko'rsatish
+      const cleanPrice = (price || '').replace(/so'?m\s*\/?\s*oy?/gi, '').replace(/\/\s*oy/gi, '').trim();
+      document.getElementById('edit-c-price').value = cleanPrice;
+      document.getElementById('edit-c-duration').value = duration;
+      document.getElementById('edit-c-badge').value = badge;
+      document.getElementById('edit-c-description').value = description;
+      document.getElementById('modal-edit-course').classList.remove('hidden');
+    }
+    function closeEditCourseModal() {
+      document.getElementById('modal-edit-course').classList.add('hidden');
+    }
+
+    // 2. NATIJANI TAHRIRLASH
+    function openEditResultModal(id, studentName, score, details, description, tgUrl, videoUrl, imageUrl) {
+      document.getElementById('edit-r-id').value = id;
+      document.getElementById('edit-r-name').value = studentName;
+      document.getElementById('edit-r-score').value = score;
+      document.getElementById('edit-r-details').value = details;
+      document.getElementById('edit-r-description').value = description;
+      document.getElementById('edit-r-tg-url').value = tgUrl;
+      document.getElementById('edit-r-video-url').value = videoUrl;
+      document.getElementById('edit-r-image-url').value = imageUrl;
+      document.getElementById('edit-r-current-img').src = imageUrl;
+      document.getElementById('modal-edit-result').classList.remove('hidden');
+    }
+    function closeEditResultModal() {
+      document.getElementById('modal-edit-result').classList.add('hidden');
+    }
+
+    // 3. PLACEMENT SAVOLINI TAHRIRLASH
+    function openEditPlacementModal(id, question, opt0, opt1, opt2, opt3, answer) {
+      document.getElementById('edit-q-id').value = id;
+      document.getElementById('edit-q-question').value = question;
+      document.getElementById('edit-q-opt0').value = opt0;
+      document.getElementById('edit-q-opt1').value = opt1;
+      document.getElementById('edit-q-opt2').value = opt2;
+      document.getElementById('edit-q-opt3').value = opt3;
+      document.getElementById('edit-q-answer').value = answer;
+      document.getElementById('modal-edit-placement').classList.remove('hidden');
+    }
+    function closeEditPlacementModal() {
+      document.getElementById('modal-edit-placement').classList.add('hidden');
+    }
+
+    // 4. URINISH BERISH MODALI
+    function openGrantModal(telegramId, studentName) {
+      document.getElementById('grant-telegram-id').value = telegramId;
+      document.getElementById('grant-student-name').innerText = studentName;
+      document.getElementById('modal-grant-attempt').classList.remove('hidden');
+    }
+    function closeGrantModal() {
+      document.getElementById('modal-grant-attempt').classList.add('hidden');
+    }
+
+    // 5. GURUH JADVALINI TAHRIRLASH
+    function openEditScheduleModal(id, type, level, days, time, current, maxStudents) {
+      document.getElementById('edit-s-id').value = id;
+      document.getElementById('edit-s-type').value = type;
+      document.getElementById('edit-s-level').value = level;
+      document.getElementById('edit-s-days').value = days;
+      document.getElementById('edit-s-time').value = time;
+      document.getElementById('edit-s-current').value = current;
+      document.getElementById('edit-s-max').value = maxStudents;
+      document.getElementById('modal-edit-schedule').classList.remove('hidden');
+    }
+    function closeEditScheduleModal() {
+      document.getElementById('modal-edit-schedule').classList.add('hidden');
+    }
+
+    // 6. TADBIR QATNASHCHILARI MODALI
+    async function openEventParticipantsModal(eventId, eventTitle) {
+      document.getElementById('part-event-title').innerText = eventTitle;
+      document.getElementById('participants-loading').classList.remove('hidden');
+      document.getElementById('participants-table-wrap').classList.add('hidden');
+      document.getElementById('modal-event-participants').classList.remove('hidden');
+
+      try {
+        const res = await fetch(`/admin/api/event-participants?event_id=${eventId}`);
+        const data = await res.json();
+        const tbody = document.getElementById('participants-tbody');
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-500">Hozircha hech kim ro\'yxatdan o\'tmagan.</td></tr>';
+        } else {
+          data.forEach((p, idx) => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-800/40";
+            tr.innerHTML = `
+              <td class="p-3 text-slate-500 font-mono">${idx + 1}</td>
+              <td class="p-3 font-bold text-white">${p.full_name || 'Noma\'lum'}</td>
+              <td class="p-3 font-mono text-emerald-400 font-bold">${p.phone || '-'}</td>
+              <td class="p-3 font-mono text-slate-400 text-[11px]">${p.telegram_id || '-'}</td>
+              <td class="p-3 text-[11px] text-slate-400">${p.registered_at || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+        document.getElementById('participants-loading').classList.add('hidden');
+        document.getElementById('participants-table-wrap').classList.remove('hidden');
+      } catch(e) {
+        document.getElementById('participants-loading').innerText = "Ma'lumotlarni yuklashda xatolik yuz berdi.";
+      }
+    }
+    function closeEventParticipantsModal() {
+      document.getElementById('modal-event-participants').classList.add('hidden');
+    }
+
+    // Modal fonini bosganda yopish
+    ['modal-edit-course', 'modal-edit-result', 'modal-edit-placement', 'modal-grant-attempt', 'modal-edit-schedule', 'modal-event-participants'].forEach(modalId => {
+      const el = document.getElementById(modalId);
+      if (el) {
+        el.addEventListener('click', (e) => {
+          if (e.target.id === modalId) el.classList.add('hidden');
+        });
+      }
+    });
+
+    // Sahifa yuklanganda URL parametrlarini tekshirish
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      if (tab) switchTab(tab);
+      const success = urlParams.get('success');
+      if (success) showToast(success);
+      const error = urlParams.get('error');
+      if (error) alert("Xatolik: " + error);
+    });
+  </script>
+</body>
+</html>

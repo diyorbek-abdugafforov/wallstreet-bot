@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wall Street - Darajani Aniqlash Testi</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+      color: #f8fafc;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+    .btn-gradient {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+      box-shadow: 0 8px 25px -4px rgba(37, 99, 235, 0.5);
+    }
+    .btn-gradient:active {
+      transform: scale(0.97);
+    }
+    .btn-option {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-option:active {
+      transform: scale(0.98);
+    }
+    .btn-option.selected {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.3) 0%, rgba(30, 64, 175, 0.4) 100%);
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+      50% { opacity: 1; transform: translateY(4px) scale(1.02); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .animate-cheer {
+      animation: bounceIn 0.35s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 selection:bg-blue-500 selection:text-white relative">
+
+  <!-- MOTIVATIONAL JOY POPUP BANNER (HAR BIR JAVOBDA CHIQADI) -->
+  <div id="joy-feedback" class="fixed top-4 left-4 right-4 z-50 pointer-events-none hidden max-w-md mx-auto">
+    <div class="glass-card bg-slate-900/95 border-2 border-emerald-400/60 rounded-2xl p-4 shadow-2xl flex items-center gap-3 animate-cheer">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center text-2xl shadow-lg flex-shrink-0 animate-bounce">
+        🌟
+      </div>
+      <div class="flex-1">
+        <h4 id="joy-title" class="text-xs font-black tracking-wider text-emerald-400 uppercase">SPOT ON!</h4>
+        <p id="joy-message" class="text-xs font-semibold text-white">Brilliant! You're on fire today!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-md mx-auto w-full flex-1 flex flex-col justify-center my-auto">
+
+    <!-- 1. KUTIB OLISH EKRANI -->
+    <div id="welcome-screen" class="glass-card rounded-3xl p-6 text-center">
+      <div class="w-20 h-20 mx-auto mb-5 rounded-2xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/20 flex items-center justify-center border border-blue-400/30 shadow-lg shadow-blue-500/10">
+        <span class="text-4xl animate-pulse">🎯</span>
+      </div>
+      
+      <span class="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-bold uppercase tracking-wider mb-2 border border-blue-500/30">
+        Wall Street English
+      </span>
+
+      <h1 class="text-2xl font-black text-white mb-2 tracking-tight">
+        Salom, <span id="student-name" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">O'quvchi</span>! 👋
+      </h1>
+      
+      <p class="text-slate-300 text-xs leading-relaxed mb-6">
+        Ingliz tili darajangizni aniqlash uchun maxsus test. Har bir javobingiz baholanadi va yakunda sizga <b>1-bepul sinov darsi</b> taqdim etiladi!
+      </p>
+
+      <div class="bg-slate-900/80 rounded-2xl p-4 mb-6 text-left border border-slate-700/50 space-y-2.5">
+        <div class="flex items-center gap-3 text-xs text-slate-300">
+          <span class="w-6 h-6 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs">⏱</span>
+          Test davomiyligi: <b>2-3 daqiqa</b>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-slate-300">
+          <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">📝</span>
+          Savollar soni: <b><span id="total-q-badge">6</span> ta savol</b>
+        </div>
+        <div class="flex items-center gap-3 text-xs text-slate-300">
+          <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">🎁</span>
+          Kafolatlangan bonus: <b>1-sinov darsi bepul</b>
+        </div>
+      </div>
+
+      <button onclick="startQuiz()" class="btn-gradient w-full py-4 rounded-2xl text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200">
+        <span>Testni boshlash</span> 🚀
+      </button>
+    </div>
+
+    <!-- 2. SAVOLLAR EKRANI -->
+    <div id="quiz-screen" class="glass-card rounded-3xl p-6 hidden relative">
+      <!-- Progress Bar -->
+      <div class="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+        <span id="question-progress" class="text-blue-400">1 / 6</span>
+        <span id="level-badge" class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] uppercase font-extrabold">Placement Test</span>
+      </div>
+      
+      <div class="w-full bg-slate-900 rounded-full h-2.5 mb-6 overflow-hidden p-0.5 border border-slate-700/50">
+        <div id="progress-bar-fill" class="bg-gradient-to-r from-blue-500 to-indigo-400 h-1.5 rounded-full transition-all duration-300 shadow-sm" style="width: 15%"></div>
+      </div>
+
+      <div class="mb-6">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Savol:</span>
+        <h2 id="question-text" class="text-base font-extrabold text-white leading-snug">Savol yuklanmoqda...</h2>
+      </div>
+
+      <div id="options-container" class="space-y-3 mb-4"></div>
+    </div>
+
+    <!-- 3. NATIJA EKRANI -->
+    <div id="result-screen" class="glass-card rounded-3xl p-6 text-center hidden">
+      <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-tr from-emerald-500/20 to-teal-400/20 flex items-center justify-center border-2 border-emerald-400/40 shadow-xl shadow-emerald-500/10">
+        <span class="text-5xl animate-bounce">🏆</span>
+      </div>
+      
+      <span class="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider mb-2 border border-emerald-500/40">
+        Ajoyib Natija!
+      </span>
+
+      <h2 class="text-2xl font-black text-white mb-1 tracking-tight">
+        Tabriklaymiz, <span id="res-student-name">O'quvchi</span>! 🎉
+      </h2>
+      <p class="text-slate-400 text-xs mb-5">Sizning aniqlangan ingliz tili darajangiz:</p>
+
+      <div class="bg-gradient-to-br from-blue-950/70 via-slate-900/90 to-indigo-950/70 rounded-2xl p-5 mb-5 border border-blue-500/40 shadow-xl">
+        <div id="final-level" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400 mb-1">
+          Intermediate
+        </div>
+        <p id="final-score" class="text-slate-300 text-xs font-semibold">To'plangan natija: 5 / 6 ball (83%)</p>
+      </div>
+
+      <div class="bg-slate-900/80 rounded-2xl p-4 mb-6 text-left border border-slate-700/50 space-y-2">
+        <div class="flex items-start gap-2.5 text-xs text-slate-300">
+          <span class="text-emerald-400 text-base">🎁</span>
+          <p class="leading-relaxed">Sizga <b>1-bepul sinov darsi</b> va 10% chegirma kuponi taqdim etildi.</p>
+        </div>
+        <div class="flex items-start gap-2.5 text-xs text-slate-300">
+          <span class="text-blue-400 text-base">⚡</span>
+          <p class="leading-relaxed">Reception xodimlarimiz dars jadvali va o'qituvchini belgilash uchun tez orada siz bilan bog'lanishadi.</p>
+        </div>
+      </div>
+
+      <button id="submit-btn" onclick="submitResultAndClose()" class="btn-gradient w-full py-4 rounded-2xl text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200">
+        <span>Arizani tasdiqlash & Botga qaytish</span> ✅
+      </button>
+    </div>
+
+  </div>
+
+  <footer class="text-center text-[11px] text-slate-500 py-2">
+    Wall Street Education • Reception Tizimi
+  </footer>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const uid = urlParams.get('uid') || '0';
+
+    if (tg?.initDataUnsafe?.user) {
+      const u = tg.initDataUnsafe.user;
+      const name = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.username || "O'quvchi";
+      document.getElementById('student-name').innerText = name;
+      document.getElementById('res-student-name').innerText = name;
+    }
+
+    // KREATIV INGLIZCHA MOTIVATSION XABARLAR (HAR BIR JAVOB OLGANDA CHIQADI)
+    const cheers = [
+      { emoji: "🎯", title: "SPOT ON!", msg: "Brilliant choice! You're sharp!" },
+      { emoji: "🔥", title: "ON FIRE!", msg: "Incredible accuracy! Keep pushing!" },
+      { emoji: "🌟", title: "GENIUS MOVE!", msg: "Outstanding! You're shining bright!" },
+      { emoji: "🚀", title: "SOARING HIGH!", msg: "Great English instincts! Superb!" },
+      { emoji: "💎", title: "FLAWLESS!", msg: "Marvelous answer! Absolutely top notch!" },
+      { emoji: "⚡", title: "LIGHTNING FAST!", msg: "Sharp and confident! Moving forward!" },
+      { emoji: "🏆", title: "CHAMPION VIBES!", msg: "Pure excellence! Wall Street spirit!" },
+      { emoji: "✨", title: "SPLENDID!", msg: "That was wonderful! Keep rocking!" }
+    ];
+
+    // Ovozli mikro-feedback (Web Audio API orqali, hech qanday faylsiz)
+    function playCheerSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch(e) {}
+    }
+
+    const questions = [
+      {
+        id: 1,
+        question: "1. She _______ to the gym every morning before breakfast.",
+        options: ["go", "goes", "is going", "went"],
+        answer: 1,
+        level: "Beginner"
+      },
+      {
+        id: 2,
+        question: "2. We haven't seen them _______ last summer.",
+        options: ["for", "since", "during", "while"],
+        answer: 1,
+        level: "Elementary"
+      },
+      {
+        id: 3,
+        question: "3. If I _______ you, I would take that opportunity immediately.",
+        options: ["am", "was", "were", "had been"],
+        answer: 2,
+        level: "Pre-Intermediate"
+      },
+      {
+        id: 4,
+        question: "4. Despite _______ tired, he continued preparing for his IELTS exam.",
+        options: ["being", "be", "was", "to be"],
+        answer: 0,
+        level: "Intermediate"
+      },
+      {
+        id: 5,
+        question: "5. By the time the teacher entered, the students _______ their assignment.",
+        options: ["finished", "have finished", "had finished", "finish"],
+        answer: 2,
+        level: "Intermediate"
+      },
+      {
+        id: 6,
+        question: "6. Hardly _______ entered the room when the phone started ringing.",
+        options: ["he had", "had he", "he did", "did he"],
+        answer: 1,
+        level: "Upper-Intermediate"
+      }
+    ];
+
+    document.getElementById('total-q-badge').innerText = questions.length;
+
+    let currentIndex = 0;
+    let score = 0;
+    let calculatedLevel = "Beginner";
+    let isAnsweringBlocked = false;
+
+    function startQuiz() {
+      document.getElementById('welcome-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      if (currentIndex >= questions.length) {
+        showResult();
+        return;
+      }
+
+      isAnsweringBlocked = false;
+      const q = questions[currentIndex];
+      document.getElementById('question-progress').innerText = `${currentIndex + 1} / ${questions.length}`;
+      document.getElementById('progress-bar-fill').style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+      document.getElementById('question-text').innerText = q.question;
+      document.getElementById('level-badge').innerText = q.level || "Ingliz tili";
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+
+      const letters = ["A", "B", "C", "D"];
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "btn-option w-full p-4 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-left text-xs font-bold text-slate-200 border border-slate-700/60 flex items-center gap-3";
+        btn.innerHTML = `<span class="w-7 h-7 rounded-xl bg-slate-800 text-blue-400 flex items-center justify-center text-xs font-black border border-slate-700">${letters[idx] || (idx+1)}</span> <span class="flex-1">${opt}</span>`;
+        btn.onclick = () => selectAnswer(idx, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(selectedIdx, btnElement) {
+      if (isAnsweringBlocked) return;
+      isAnsweringBlocked = true;
+
+      const q = questions[currentIndex];
+      if (selectedIdx === q.answer) {
+        score++;
+      }
+
+      // Tugmani tanlangan sifatida belgilash
+      btnElement.classList.add('selected');
+
+      // 1. Kreativ xursand qiluvchi inglizcha xabarni ko'rsatish
+      const randomCheer = cheers[Math.floor(Math.random() * cheers.length)];
+      const joyBanner = document.getElementById('joy-feedback');
+      document.getElementById('joy-title').innerText = `${randomCheer.emoji} ${randomCheer.title}`;
+      document.getElementById('joy-message').innerText = randomCheer.msg;
+      
+      joyBanner.classList.remove('hidden');
+      playCheerSound();
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+
+      // 700ms dan so'ng keyingi savolga o'tish
+      setTimeout(() => {
+        joyBanner.classList.add('hidden');
+        currentIndex++;
+        loadQuestion();
+      }, 700);
+    }
+
+    function showResult() {
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('result-screen').classList.remove('hidden');
+
+      const ratio = score / questions.length;
+      if (ratio <= 0.3) {
+        calculatedLevel = "Beginner";
+      } else if (ratio <= 0.55) {
+        calculatedLevel = "Elementary";
+      } else if (ratio <= 0.8) {
+        calculatedLevel = "Pre-Intermediate";
+      } else {
+        calculatedLevel = "Intermediate";
+      }
+
+      document.getElementById('final-level').innerText = calculatedLevel;
+      document.getElementById('final-score').innerText = `To'plangan natija: ${score} / ${questions.length} ball (${Math.round(ratio*100)}%)`;
+
+      // Confetti portlashi
+      if (window.confetti) {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    function submitResultAndClose() {
+      const payload = {
+        action: "submit_level_test",
+        level: calculatedLevel,
+        score: score,
+        total: questions.length
+      };
+
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify(payload));
+      } else {
+        alert(`Darajangiz: ${calculatedLevel}! Botga qaytishingiz mumkin.`);
+      }
+      if (tg) tg.close();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "question": "1. She _______ to the gym every morning before breakfast.",
+    "options": [
+      "go",
+      "goes",
+      "is going",
+      "went"
+    ],
+    "answer": 1,
+    "level": "Beginner"
+  },
+  {
+    "id": 2,
+    "question": "2. We haven't seen them _______ last summer.",
+    "options": [
+      "for",
+      "since",
+      "during",
+      "while"
+    ],
+    "answer": 1,
+    "level": "Elementary"
+  },
+  {
+    "id": 3,
+    "question": "3. If I _______ you, I would take that opportunity immediately.",
+    "options": [
+      "am",
+      "was",
+      "were",
+      "had been"
+    ],
+    "answer": 2,
+    "level": "Pre-Intermediate"
+  },
+  {
+    "id": 4,
+    "question": "4. Despite _______ tired, he continued preparing for his IELTS exam.",
+    "options": [
+      "being",
+      "be",
+      "was",
+      "to be"
+    ],
+    "answer": 0,
+    "level": "Intermediate"
+  },
+  {
+    "id": 5,
+    "question": "5. By the time the teacher entered, the students _______ their assignment.",
+    "options": [
+      "finished",
+      "have finished",
+      "had finished",
+      "finish"
+    ],
+    "answer": 2,
+    "level": "Intermediate"
+  },
+  {
+    "id": 6,
+    "question": "6. Hardly _______ entered the room when the phone started ringing.",
+    "options": [
+      "he had",
+      "had he",
+      "he did",
+      "did he"
+    ],
+    "answer": 1,
+    "level": "Upper-Intermediate"
+  }
+]

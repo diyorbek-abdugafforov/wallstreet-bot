@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wall Street - Barcha Bo'limlar & Web App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 45%, #020617 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 140px; /* Pastki nav bar orqasidagi tugmalar to'liq ko'rinishi uchun */
+    }
+    /* Scrollbarni butunlay yashirish (ayniqsa mobil va desktop gorizontal filterlar uchun) */
+    .no-scrollbar::-webkit-scrollbar,
+    ::-webkit-scrollbar:horizontal {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none !important;  /* IE and Edge */
+      scrollbar-width: none !important;   /* Firefox */
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      transition: all 0.25s ease;
+    }
+    .glass-card:active {
+      transform: scale(0.985);
+    }
+    .btn-gradient {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+      box-shadow: 0 8px 25px -4px rgba(37, 99, 235, 0.5);
+    }
+    .btn-gradient:active {
+      transform: scale(0.97);
+    }
+    .btn-telegram {
+      background: linear-gradient(135deg, #0088cc 0%, #0077b5 100%);
+      box-shadow: 0 8px 20px -3px rgba(0, 136, 204, 0.5);
+    }
+    .btn-option {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-option:active {
+      transform: scale(0.98);
+    }
+    .btn-option.selected {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.3) 0%, rgba(30, 64, 175, 0.4) 100%);
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    .nav-tab-active {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.3);
+    }
+    .bottom-tab-active {
+      color: #38bdf8;
+    }
+    .bottom-tab-active .tab-icon-wrap {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-2px);
+    }
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+      50% { opacity: 1; transform: translateY(4px) scale(1.02); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    .animate-cheer {
+      animation: bounceIn 0.35s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="p-4 selection:bg-blue-500 selection:text-white relative">
+
+  <!-- MOTIVATIONAL JOY POPUP BANNER (TEST PAYTIDA CHIQADI) -->
+  <div id="joy-feedback" class="fixed top-4 left-4 right-4 z-50 pointer-events-none hidden max-w-md mx-auto">
+    <div class="glass-card bg-slate-900/95 border-2 border-emerald-400/60 rounded-2xl p-4 shadow-2xl flex items-center gap-3 animate-cheer">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center text-2xl shadow-lg flex-shrink-0 animate-bounce">
+        🌟
+      </div>
+      <div class="flex-1">
+        <h4 id="joy-title" class="text-xs font-black tracking-wider text-emerald-400 uppercase">SPOT ON!</h4>
+        <p id="joy-message" class="text-xs font-semibold text-white">Brilliant! You're on fire today!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCKED SECTION NOTICE MODAL -->
+  <div id="locked-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-slate-900 border border-amber-500/40 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-3xl">
+        🔒
+      </div>
+      <h3 class="text-base font-black text-white">Bo'limlar Qulflangan!</h3>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Markazimiz dars jadvallari, kurslar va boshqa bo'limlarni ko'rish uchun avval <b>Ingliz tili darajangizni aniqlash testini</b> topshiring va arizangizni tasdiqlang.
+      </p>
+      <button onclick="closeLockedModalAndGoTest()" class="btn-gradient w-full py-3.5 rounded-2xl text-white font-black text-xs uppercase tracking-wider">
+        Testni Boshlash 🎯
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-md mx-auto w-full">
+
+    <!-- ASOSIY HEADER -->
+    <header class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800/80">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/20">
+          WS
+        </div>
+        <div>
+          <span class="text-[9px] font-black uppercase tracking-widest text-blue-400 block">Education Center</span>
+          <h1 class="text-base font-black text-white tracking-tight flex items-center gap-1.5">
+            Salom, <span id="header-user-name" class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">O'quvchi</span> 👋
+          </h1>
+        </div>
+      </div>
+      <button onclick="window.Telegram?.WebApp?.close()" class="w-8 h-8 rounded-full bg-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold border border-slate-700">✕</button>
+    </header>
+
+    <!-- TEZKOR STATUS BANNER -->
+    <div class="glass-card rounded-2xl p-3 mb-4 flex items-center justify-between text-xs bg-gradient-to-r from-blue-900/30 to-indigo-900/30 border-blue-500/20">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-slate-300 font-semibold text-[11px]">1-bepul sinov darsi bonusi faol</span>
+      </div>
+      <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-black text-[10px] uppercase tracking-wider">BEPUL</span>
+    </div>
+
+    <!-- BO'LIM 1: 🎯 DARAJANI ANIQLASH TESTI (TAB: test) -->
+    <div id="view-test" class="tab-view space-y-4">
+      
+      <!-- Welcome screen -->
+      <div id="test-welcome-screen" class="glass-card rounded-3xl p-6 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-blue-600/30 to-indigo-500/20 flex items-center justify-center border border-blue-400/30 shadow-lg shadow-blue-500/10">
+          <span class="text-4xl animate-pulse">🎯</span>
+        </div>
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-black uppercase tracking-wider mb-2 border border-blue-500/30">
+          Placement Test
+        </span>
+        <h2 class="text-xl font-black text-white mb-2">Ingliz Tili Darajangizni Aniqlang</h2>
+        <p class="text-slate-300 text-xs leading-relaxed mb-4">
+          6 ta savolga javob bering, bilim darajangizni aniqlang va <b>1-bepul sinov darsiga</b> yo'llanma oling!
+        </p>
+
+        <!-- URINISHLAR VA OGOHLANTIRISH PANELI -->
+        <div id="test-attempts-box" class="bg-slate-900/90 rounded-2xl p-4 mb-4 text-left border border-slate-700/60 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-bold">Imkoniyatingiz:</span>
+            <span id="attempts-badge" class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-extrabold text-[11px] border border-blue-500/30">1 ta urinish mavjud</span>
+          </div>
+          <p id="attempts-warning" class="text-[11px] text-amber-300/95 leading-snug">
+            ⚠️ <b>Ogohlantirish:</b> Har bir foydalanuvchiga testni faqat <b>1 marta</b> topshirish imkoni beriladi. Ishlatilgach, qayta test yechish faqat markaz administratori ruxsati bilan mumkin bo'ladi!
+          </p>
+        </div>
+
+        <div class="bg-slate-900/70 rounded-2xl p-3.5 mb-5 text-left border border-slate-700/40 space-y-2 text-xs text-slate-300">
+          <div class="flex items-center gap-2.5">
+            <span class="text-blue-400">⏱</span> Vaqt: <b>2-3 daqiqa</b>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="text-emerald-400">📝</span> Savollar: <b>6 ta savol</b>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="text-amber-400">🎁</span> Bonus: <b>1-sinov darsi bepul</b>
+          </div>
+        </div>
+
+        <button id="btn-start-quiz" onclick="startQuiz()" class="btn-gradient w-full py-4 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200 shadow-xl shadow-blue-500/25">
+          <span>Testni boshlash</span> 🚀
+        </button>
+
+        <button id="btn-no-attempts" onclick="contactAdminForAttempt()" class="hidden w-full py-4 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <span>Urinishingiz tugagan (Adminga yozish)</span> 💬
+        </button>
+      </div>
+
+      <!-- Quiz screen -->
+      <div id="test-quiz-screen" class="glass-card rounded-3xl p-6 hidden relative">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
+          <span id="question-progress" class="text-blue-400 font-mono">1 / 6</span>
+          <span id="level-badge" class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 text-[10px] uppercase font-extrabold">Ingliz tili</span>
+        </div>
+        
+        <div class="w-full bg-slate-900 rounded-full h-2.5 mb-6 overflow-hidden p-0.5 border border-slate-700/50">
+          <div id="progress-bar-fill" class="bg-gradient-to-r from-blue-500 to-indigo-400 h-1.5 rounded-full transition-all duration-300 shadow-sm" style="width: 15%"></div>
+        </div>
+
+        <div class="mb-5">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Savol:</span>
+          <h3 id="question-text" class="text-sm font-extrabold text-white leading-snug">Savol yuklanmoqda...</h3>
+        </div>
+
+        <div id="options-container" class="space-y-3 mb-2"></div>
+
+        <!-- KEYINGISI TUGMASI (AVTO-O'TIB KETMASLIGI UCHUN) -->
+        <div id="next-question-wrap" class="mt-4 pt-3 border-t border-slate-800 hidden">
+          <button id="btn-next-question" onclick="proceedNextQuestion()" class="btn-gradient w-full py-3.5 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 animate-bounce">
+            <span id="btn-next-text">Keyingi savol</span> ➔
+          </button>
+        </div>
+      </div>
+
+      <!-- Result screen -->
+      <div id="test-result-screen" class="glass-card rounded-3xl p-6 text-center hidden">
+        <div class="w-20 h-20 mx-auto mb-3 rounded-full bg-gradient-to-tr from-emerald-500/20 to-teal-400/20 flex items-center justify-center border-2 border-emerald-400/40 shadow-xl">
+          <span class="text-4xl animate-bounce">🏆</span>
+        </div>
+        
+        <span class="inline-block px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-2 border border-emerald-500/40">
+          Daraja Muvaffaqiyatli Aniqlandi
+        </span>
+
+        <h2 class="text-xl font-black text-white mb-1">
+          Ajoyib Natija, <span id="res-student-name">O'quvchi</span>! 🎉
+        </h2>
+        <p class="text-slate-400 text-xs mb-3">Sizning aniqlangan darajangiz:</p>
+
+        <div class="bg-gradient-to-br from-blue-950/70 via-slate-900/90 to-indigo-950/70 rounded-2xl p-4 mb-4 border border-blue-500/40 shadow-xl">
+          <div id="final-level" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-300 to-emerald-400 mb-1">
+            Intermediate
+          </div>
+          <p id="final-score" class="text-slate-300 text-xs font-semibold">To'plangan natija: 5 / 6 ball (83%)</p>
+        </div>
+
+        <!-- ARIZANI TASDIQLASH VA MA'LUMOTLAR KARTASI -->
+        <div class="bg-slate-900/90 rounded-2xl p-4 mb-4 text-left border border-slate-700/60 space-y-3 text-xs">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="font-black text-white text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+              <span>📋</span> Arizangiz ma'lumotlari:
+            </span>
+            <button type="button" onclick="toggleEditDetails()" class="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1">
+              <span>✏️</span> Tahrirlash
+            </button>
+          </div>
+
+          <!-- Ko'rinadigan ma'lumotlar -->
+          <div id="conf-view-box" class="space-y-1.5 text-xs">
+            <div class="flex justify-between items-center text-slate-300">
+              <span class="text-slate-400 text-[11px]">Ism, Familiya:</span>
+              <b id="conf-disp-name" class="text-white text-right">O'quvchi</b>
+            </div>
+            <div class="flex justify-between items-center text-slate-300">
+              <span class="text-slate-400 text-[11px]">Telefon raqam:</span>
+              <b id="conf-disp-phone" class="font-mono text-emerald-400 text-right">+998 (--) --- -- --</b>
+            </div>
+            <div class="flex justify-between items-center text-slate-300">
+              <span class="text-slate-400 text-[11px]">Belgilangan daraja:</span>
+              <b id="conf-disp-level" class="text-blue-400 text-right">Intermediate</b>
+            </div>
+          </div>
+
+          <!-- Inline tahrirlash formasi (yashirin) -->
+          <div id="conf-edit-box" class="hidden space-y-2 pt-2 border-t border-slate-800 text-xs">
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Ism-familiyangiz:</label>
+              <input type="text" id="edit-input-name" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-bold text-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Telefon raqamingiz:</label>
+              <input type="tel" id="edit-input-phone" class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-emerald-400 font-mono font-bold text-xs focus:outline-none focus:border-blue-500">
+            </div>
+            <button type="button" onclick="saveEditedDetails()" class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition">
+              💾 Saqlash
+            </button>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 text-[11px] text-amber-300/95 font-medium leading-relaxed">
+            ❓ <b>Arizangizni markazimizga yuborishga rozimisiz?</b>
+            <p class="text-[10px] text-slate-400 mt-0.5">Tasdiqlaganingizdan so'ng reception adminlari siz bilan mos guruh dars vaqtlari bo'yicha bog'lanadi va barcha bo'limlar ochiladi.</p>
+          </div>
+        </div>
+
+        <!-- TUGMALAR -->
+        <div class="space-y-2">
+          <button id="btn-submit-app" onclick="confirmApplicationSubmission()" class="btn-gradient w-full py-4 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200 shadow-xl shadow-blue-500/25">
+            <span>✅ Ha, Roziman (Arizani Yuborish)</span>
+          </button>
+          <button type="button" onclick="cancelApplicationResult()" class="w-full py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white font-bold text-xs transition">
+            ❌ Bekor qilish
+          </button>
+        </div>
+      </div>
+
+      <!-- Pastki nav bar to'sib qo'ymasligi uchun bo'sh joy -->
+      <div class="h-28 w-full pointer-events-none"></div>
+    </div>
+
+    <!-- BO'LIM 2: 📚 KURSLAR VA NARXLAR (TAB: courses) -->
+    <div id="view-courses" class="tab-view space-y-4 hidden">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-base font-black text-white">📚 Barcha O'quv Yo'nalishlari</h2>
+        <span class="text-[10px] text-slate-400">4 ta yo'nalish</span>
+      </div>
+
+      <!-- Kurs toifalari filtri -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+        <button onclick="filterCourses('all')" class="course-filter-btn px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-[11px] whitespace-nowrap shadow-sm" data-category="all">Barchasi</button>
+        <button onclick="filterCourses('General')" class="course-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="General">General English</button>
+        <button onclick="filterCourses('IELTS')" class="course-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="IELTS">IELTS Rocket</button>
+        <button onclick="filterCourses('Kids')" class="course-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="Kids">Kids English</button>
+        <button onclick="filterCourses('IT')" class="course-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="IT">IT Dasturlash</button>
+      </div>
+
+      <div id="courses-list" class="space-y-3.5"></div>
+
+      <!-- Pastki nav bar to'sib qo'ymasligi uchun bo'sh joy -->
+      <div class="h-28 w-full pointer-events-none"></div>
+    </div>
+
+    <!-- BO'LIM 3: 🕒 DARS JADVALLARI (TAB: schedule) -->
+    <div id="view-schedule" class="tab-view space-y-3.5 hidden">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-base font-black text-white">🕒 Guruhlar va Dars Vaqtlari</h2>
+        <span class="text-[10px] text-emerald-400 font-bold">● Qabul ochiq</span>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed mb-1">
+        O'zingizga mos vaqt va darajadagi guruhni tanlang. Bo'sh joylar soni cheklangan!
+      </p>
+
+      <div id="schedules-list" class="space-y-3.5"></div>
+
+      <!-- Pastki nav bar to'sib qo'ymasligi uchun bo'sh joy -->
+      <div class="h-28 w-full pointer-events-none"></div>
+    </div>
+
+    <!-- BO'LIM 6: 🎟 TADBIRLAR & MASTER-KLASSLAR (TAB: events) -->
+    <div id="view-events" class="tab-view space-y-3.5 hidden">
+      <div class="flex items-center justify-between mb-1">
+        <h2 class="text-base font-black text-white">🎟 Markaz Tadbirlari</h2>
+        <span class="text-[10px] text-purple-400 font-bold">● Qatnashish Bepul</span>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Wall Street instruktorlari tomonidan o'tkaziladigan ochiq master-klasslar, seminar va marafonlarga yoziling.
+      </p>
+
+      <div id="events-list" class="space-y-3.5"></div>
+
+      <!-- Pastki nav bar to'sib qo'ymasligi uchun bo'sh joy -->
+      <div class="h-28 w-full pointer-events-none"></div>
+    </div>
+
+    <!-- BO'LIM 4: 🏆 O'QUVCHILAR NATIJALARI (TAB: results) -->
+    <div id="view-results" class="tab-view space-y-4 hidden">
+      <div class="glass-card rounded-2xl p-3.5 flex items-center justify-around border-amber-500/20 text-center">
+        <div>
+          <span class="text-lg font-black text-amber-400">98%</span>
+          <p class="text-[9px] text-slate-400 font-bold uppercase">Muvaffaqiyat</p>
+        </div>
+        <div class="h-6 w-px bg-slate-700/60"></div>
+        <div>
+          <span class="text-lg font-black text-blue-400">7.5+</span>
+          <p class="text-[9px] text-slate-400 font-bold uppercase">O'rtacha IELTS</p>
+        </div>
+        <div class="h-6 w-px bg-slate-700/60"></div>
+        <div>
+          <span class="text-lg font-black text-emerald-400">500+</span>
+          <p class="text-[9px] text-slate-400 font-bold uppercase">Sertifikatlar</p>
+        </div>
+      </div>
+
+      <!-- Natijalar toifalari filtri -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+        <button onclick="filterResults('all')" class="result-filter-btn px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-[11px] whitespace-nowrap shadow-sm" data-category="all">Barchasi</button>
+        <button onclick="filterResults('8.0')" class="result-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="8.0">IELTS 8.0</button>
+        <button onclick="filterResults('7.5')" class="result-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="7.5">IELTS 7.5</button>
+        <button onclick="filterResults('CEFR')" class="result-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50" data-category="CEFR">CEFR C1</button>
+      </div>
+
+      <div id="results-list" class="space-y-3.5"></div>
+
+      <!-- Pastki nav bar to'sib qo'ymasligi uchun bo'sh joy -->
+      <div class="h-28 w-full pointer-events-none"></div>
+    </div>
+
+    <!-- BO'LIM 5: 📞 RECEPTION & PROMOKODLAR (TAB: reception) -->
+    <div id="view-reception" class="tab-view space-y-4 hidden">
+      <div class="glass-card rounded-3xl p-5 space-y-4">
+        <div class="text-center pb-3 border-b border-slate-700/50">
+          <div class="w-16 h-16 mx-auto mb-2 rounded-2xl bg-blue-500/15 flex items-center justify-center text-3xl">
+            🏢
+          </div>
+          <h2 class="text-lg font-black text-white">Wall Street Education</h2>
+          <p class="text-xs text-slate-400">Reception va Maslahat Markazi</p>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
+            <span class="text-xl">📞</span>
+            <div class="flex-1">
+              <span class="text-[10px] text-slate-400 block">Asosiy telefon:</span>
+              <a href="tel:+998712007777" class="text-sm font-extrabold text-blue-400 hover:underline">+998 71 200 77 77</a>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
+            <span class="text-xl">📱</span>
+            <div class="flex-1">
+              <span class="text-[10px] text-slate-400 block">Qo'shimcha raqam:</span>
+              <a href="tel:+998901234567" class="text-sm font-extrabold text-blue-400 hover:underline">+998 90 123 45 67</a>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
+            <span class="text-xl">⏰</span>
+            <div class="flex-1">
+              <span class="text-[10px] text-slate-400 block">Ish vaqti:</span>
+              <span class="text-xs font-bold text-white">Har kuni: 08:30 - 20:30</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-800/40 border border-slate-700/40">
+            <span class="text-xl">📍</span>
+            <div class="flex-1">
+              <span class="text-[10px] text-slate-400 block">Manzil:</span>
+              <span class="text-xs font-bold text-white">Toshkent shahri, Chilonzor tumani, Bunyodkor shoh ko'chasi 15-uy</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Promokodni faollashtirish (maxfiy kod kiritish) -->
+        <div class="p-4 rounded-2xl bg-slate-800/40 border border-slate-700/50 space-y-2.5">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🎁</span>
+            <div>
+              <span class="text-xs font-bold text-white block">Promokodingiz bormi?</span>
+              <span class="text-[10px] text-slate-400">Maxsus chegirma kodini kiriting va faollashtiring</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" id="user-promocode-input" placeholder="Promokodni kiriting..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-mono uppercase tracking-wider placeholder:text-slate-500 placeholder:normal-case focus:outline-none focus:border-amber-400">
+            <button type="button" onclick="verifyUserPromocode()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs transition active:scale-95 shadow-md">Tekshirish</button>
+          </div>
+          <div id="promocode-result-box" class="hidden p-2.5 rounded-xl text-xs font-bold transition"></div>
+        </div>
+
+        <!-- FAQ: Ko'p beriladigan savollar akkordeoni -->
+        <div class="space-y-2 pt-1 border-t border-slate-800">
+          <h4 class="text-xs font-black text-slate-300 uppercase tracking-wider">❓ Ko'p beriladigan savollar</h4>
+          
+          <details class="group bg-slate-800/40 border border-slate-700/40 rounded-xl p-2.5 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex items-center justify-between cursor-pointer font-bold text-white text-xs">
+              <span>1-dars rostdan ham bepulmi?</span>
+              <span class="transition group-open:rotate-180 text-blue-400">▼</span>
+            </summary>
+            <p class="mt-2 text-[11px] text-slate-300 leading-relaxed border-t border-slate-700/50 pt-2">
+              Ha, mutlaqo bepul! Siz o'qituvchimiz metodikasi va o'quv muhiti bilan tanishib ko'rib, keyin to'lov qilishingiz mumkin.
+            </p>
+          </details>
+
+          <details class="group bg-slate-800/40 border border-slate-700/40 rounded-xl p-2.5 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex items-center justify-between cursor-pointer font-bold text-white text-xs">
+              <span>To'lovni bo'lib to'lasa bo'ladimi?</span>
+              <span class="transition group-open:rotate-180 text-blue-400">▼</span>
+            </summary>
+            <p class="mt-2 text-[11px] text-slate-300 leading-relaxed border-t border-slate-700/50 pt-2">
+              Ha, kurs to'lovlari har oy boshida oyma-oy to'lanadi. Agar 3 oylik to'lovni birdaniga amalga oshirsangiz, qo'shimcha 15% chegirma beriladi.
+            </p>
+          </details>
+
+          <details class="group bg-slate-800/40 border border-slate-700/40 rounded-xl p-2.5 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex items-center justify-between cursor-pointer font-bold text-white text-xs">
+              <span>O'qituvchilar malakasi qanday?</span>
+              <span class="transition group-open:rotate-180 text-blue-400">▼</span>
+            </summary>
+            <p class="mt-2 text-[11px] text-slate-300 leading-relaxed border-t border-slate-700/50 pt-2">
+              Barcha ustozlarimiz kamida IELTS 8.0+ yoki xalqaro TESOL/CELTA sertifikatlariga ega, tajribali mutaxassislardir.
+            </p>
+          </details>
+        </div>
+
+        <a href="https://t.me/edubot_admin" target="_blank" class="btn-gradient w-full py-3.5 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <span>Administrator bilan chat</span> 💬
+        </a>
+      </div>
+
+      <!-- Pastki nav bar to'sib qo'ymasligi uchun bo'sh joy -->
+      <div class="h-28 w-full pointer-events-none"></div>
+    </div>
+
+  </div>
+
+  <!-- KURS BATAFSIL MODAL -->
+  <div id="course-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="glass-card bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] overflow-y-auto p-5 space-y-4 relative">
+      <button onclick="closeCourseModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-xs font-bold border border-slate-700">✕</button>
+      
+      <div class="pr-8">
+        <span id="modal-c-badge" class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-black uppercase">Top Kurs</span>
+        <h2 id="modal-c-title" class="text-base font-black text-white mt-1">IELTS Rocket</h2>
+        <p id="modal-c-price" class="text-emerald-400 font-extrabold text-sm mt-0.5">850,000 so'm / oy</p>
+      </div>
+
+      <p id="modal-c-desc" class="text-xs text-slate-300 bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 leading-relaxed"></p>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40">
+          <span class="text-slate-400 text-[10px] block">⏳ Davomiyligi:</span>
+          <span id="modal-c-duration" class="font-bold text-white text-[11px]">3 - 5 oy</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40">
+          <span class="text-slate-400 text-[10px] block">🕒 Dars tartibi:</span>
+          <span id="modal-c-schedule" class="font-bold text-white text-[11px]">Haftada 3 kun</span>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold text-slate-200 mb-2 flex items-center gap-1.5">
+          <span>📖</span> Kurs dasturida nimalar o'rgatiladi:
+        </h4>
+        <ul id="modal-c-syllabus" class="space-y-1.5 text-xs text-slate-300 pl-1"></ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+        <h4 class="text-xs font-bold text-emerald-400 mb-1 flex items-center gap-1.5">
+          <span>🎁</span> Maxsus bonuslar:
+        </h4>
+        <ul id="modal-c-bonuses" class="space-y-1 text-xs text-emerald-200/90 pl-1"></ul>
+      </div>
+
+      <div class="pb-6">
+        <button id="modal-c-enroll" onclick="enrollCourse()" class="btn-gradient w-full py-3.5 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+          <span>Ushbu kursga yozilish</span> ✍️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NATIJA BATAFSIL VA ISBOT MODAL -->
+  <div id="result-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="glass-card bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-5 space-y-4 relative">
+      <button onclick="closeResultModal()" class="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-slate-800/90 text-slate-300 flex items-center justify-center text-xs font-bold border border-slate-700">✕</button>
+
+      <div class="relative rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl">
+        <img id="modal-r-img" src="" class="w-full h-48 object-cover object-top">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+        <div class="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+          <div>
+            <span id="modal-r-score" class="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-xs font-black uppercase tracking-wider">IELTS 8.0</span>
+            <h3 id="modal-r-name" class="text-base font-black text-white mt-1 drop-shadow">Azizbek Rahimov</h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Imtihon komponentlari:</span>
+        <p id="modal-r-details" class="text-xs font-bold text-slate-200"></p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold text-slate-300 mb-1 flex items-center gap-1">
+          <span>📝</span> Muvaffaqiyat tarixi:
+        </h4>
+        <p id="modal-r-desc" class="text-xs text-slate-300 bg-slate-800/40 p-3 rounded-xl border border-slate-700/40 leading-relaxed"></p>
+      </div>
+
+      <div class="space-y-2 pt-1 pb-6">
+        <a id="modal-r-tg-btn" href="#" target="_blank" class="btn-telegram w-full py-3.5 rounded-2xl text-white font-extrabold text-xs flex items-center justify-center gap-2 hidden">
+          <span>📱 Telegram kanalda to'liq isbotni ko'rish</span> ➔
+        </a>
+        <a id="modal-r-video-btn" href="#" target="_blank" class="w-full py-3 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 hidden">
+          <span>🎬 Video intervyuni ko'rish</span> ➔
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MASTER BOTTOM NAVIGATION BAR (BARCHA BO'LIMLAR BIR JOYDA!) -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 px-1.5 pt-2" style="padding-bottom: max(12px, env(safe-area-inset-bottom));">
+    <div class="max-w-md mx-auto grid grid-cols-6 gap-0.5 text-center">
+      
+      <!-- 1. Test -->
+      <button onclick="switchTab('test')" id="tab-nav-test" class="bottom-tab flex flex-col items-center justify-center py-1 text-slate-400 bottom-tab-active transition">
+        <div class="tab-icon-wrap w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-0.5 border border-transparent transition">
+          🎯
+        </div>
+        <span class="text-[9px] font-bold">Test</span>
+      </button>
+
+      <!-- 2. Kurslar -->
+      <button onclick="switchTab('courses')" id="tab-nav-courses" class="bottom-tab relative flex flex-col items-center justify-center py-1 text-slate-400 transition">
+        <div class="tab-icon-wrap w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-0.5 border border-transparent transition relative">
+          📚
+          <span id="lock-icon-courses" class="tab-lock-icon absolute -top-1 -right-1 text-[10px]">🔒</span>
+        </div>
+        <span class="text-[9px] font-bold">Kurslar</span>
+      </button>
+
+      <!-- 3. Jadval -->
+      <button onclick="switchTab('schedule')" id="tab-nav-schedule" class="bottom-tab relative flex flex-col items-center justify-center py-1 text-slate-400 transition">
+        <div class="tab-icon-wrap w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-0.5 border border-transparent transition relative">
+          🕒
+          <span id="lock-icon-schedule" class="tab-lock-icon absolute -top-1 -right-1 text-[10px]">🔒</span>
+        </div>
+        <span class="text-[9px] font-bold">Jadval</span>
+      </button>
+
+      <!-- 4. Tadbirlar -->
+      <button onclick="switchTab('events')" id="tab-nav-events" class="bottom-tab relative flex flex-col items-center justify-center py-1 text-slate-400 transition">
+        <div class="tab-icon-wrap w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-0.5 border border-transparent transition relative">
+          🎟
+          <span id="lock-icon-events" class="tab-lock-icon absolute -top-1 -right-1 text-[10px]">🔒</span>
+        </div>
+        <span class="text-[9px] font-bold">Tadbirlar</span>
+      </button>
+
+      <!-- 5. Natijalar -->
+      <button onclick="switchTab('results')" id="tab-nav-results" class="bottom-tab relative flex flex-col items-center justify-center py-1 text-slate-400 transition">
+        <div class="tab-icon-wrap w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-0.5 border border-transparent transition relative">
+          🏆
+          <span id="lock-icon-results" class="tab-lock-icon absolute -top-1 -right-1 text-[10px]">🔒</span>
+        </div>
+        <span class="text-[9px] font-bold">Natijalar</span>
+      </button>
+
+      <!-- 6. Aloqa -->
+      <button onclick="switchTab('reception')" id="tab-nav-reception" class="bottom-tab relative flex flex-col items-center justify-center py-1 text-slate-400 transition">
+        <div class="tab-icon-wrap w-8 h-8 rounded-xl flex items-center justify-center text-sm mb-0.5 border border-transparent transition relative">
+          📞
+          <span id="lock-icon-reception" class="tab-lock-icon absolute -top-1 -right-1 text-[10px]">🔒</span>
+        </div>
+        <span class="text-[9px] font-bold">Aloqa</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
+
+    // URL parametrlari
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab') || 'test';
+    const uid = urlParams.get('uid') || '0';
+
+    // Global state
+    let isApplicationSubmitted = false;
+    let userAttemptsAllowed = 1;
+    let userAttemptsUsed = 0;
+    let userFullName = "O'quvchi";
+    let userPhone = "";
+
+    // Foydalanuvchi ma'lumotlarini yuklash va urinishlarni tekshirish
+    async function initUserStatus() {
+      if (tg?.initDataUnsafe?.user) {
+        const u = tg.initDataUnsafe.user;
+        userFullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.username || "O'quvchi";
+      }
+      document.getElementById('header-user-name').innerText = userFullName;
+      document.getElementById('res-student-name').innerText = userFullName;
+      document.getElementById('conf-disp-name').innerText = userFullName;
+      document.getElementById('edit-input-name').value = userFullName;
+
+      if (localStorage.getItem('ws_app_submitted_' + uid) === 'true') {
+        isApplicationSubmitted = true;
+      }
+
+      if (uid && uid !== '0') {
+        try {
+          const res = await fetch(`/api/user-status?uid=${uid}`);
+          const data = await res.json();
+          if (data) {
+            userAttemptsAllowed = data.test_attempts_allowed ?? 1;
+            userAttemptsUsed = data.test_attempts_used ?? 0;
+            if (data.full_name) {
+              userFullName = data.full_name;
+              document.getElementById('header-user-name').innerText = userFullName;
+              document.getElementById('conf-disp-name').innerText = userFullName;
+              document.getElementById('edit-input-name').value = userFullName;
+            }
+            if (data.phone) {
+              userPhone = data.phone;
+              document.getElementById('conf-disp-phone').innerText = userPhone;
+              document.getElementById('edit-input-phone').value = userPhone;
+            }
+            if (data.application_submitted) {
+              isApplicationSubmitted = true;
+              localStorage.setItem('ws_app_submitted_' + uid, 'true');
+            }
+          }
+        } catch(e) {}
+      }
+
+      updateAttemptsDisplay();
+      updateSectionLocks();
+    }
+
+    function updateAttemptsDisplay() {
+      const left = Math.max(0, userAttemptsAllowed - userAttemptsUsed);
+      const badge = document.getElementById('attempts-badge');
+      const warning = document.getElementById('attempts-warning');
+      const startBtn = document.getElementById('btn-start-quiz');
+      const noAttemptsBtn = document.getElementById('btn-no-attempts');
+
+      if (left > 0) {
+        badge.className = "px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-extrabold text-[11px] border border-blue-500/30";
+        badge.innerText = `${left} ta urinish mavjud`;
+        warning.innerHTML = `⚠️ <b>Ogohlantirish:</b> Har bir foydalanuvchiga testni faqat <b>1 marta</b> topshirish imkoni beriladi. Ishlatilgach, qayta test yechish faqat markaz administratori ruxsati bilan mumkin bo'ladi!`;
+        startBtn.classList.remove('hidden');
+        noAttemptsBtn.classList.add('hidden');
+      } else {
+        badge.className = "px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-extrabold text-[11px] border border-rose-500/30";
+        badge.innerText = `0 ta urinish qoldi`;
+        warning.innerHTML = `❌ <b>Imkoniyatingiz tugagan:</b> Siz test topshirish imkoniyatingizdan to'liq foydalangansiz. Qayta test yechish uchun markaz ma'muriyati (admin)ga murojaat qiling.`;
+        startBtn.classList.add('hidden');
+        noAttemptsBtn.classList.remove('hidden');
+      }
+    }
+
+    function contactAdminForAttempt() {
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink('https://t.me/edubot_admin');
+      } else {
+        window.open('https://t.me/edubot_admin', '_blank');
+      }
+    }
+
+    function updateSectionLocks() {
+      const lockableTabs = ['courses', 'schedule', 'events', 'results', 'reception'];
+      lockableTabs.forEach(t => {
+        const lockIcon = document.getElementById('lock-icon-' + t);
+        if (lockIcon) {
+          if (isApplicationSubmitted) {
+            lockIcon.classList.add('hidden');
+          } else {
+            lockIcon.classList.remove('hidden');
+          }
+        }
+      });
+    }
+
+    function showLockedModal() {
+      document.getElementById('locked-modal').classList.remove('hidden');
+    }
+
+    function closeLockedModalAndGoTest() {
+      document.getElementById('locked-modal').classList.add('hidden');
+      switchTab('test');
+    }
+
+    // --- TAB SWITCHER LOGIKASI ---
+    const allTabs = ['test', 'courses', 'schedule', 'events', 'results', 'reception'];
+    function switchTab(tabName) {
+      if (!isApplicationSubmitted && tabName !== 'test') {
+        showLockedModal();
+        return;
+      }
+      allTabs.forEach(t => {
+        const viewEl = document.getElementById('view-' + t);
+        const navEl = document.getElementById('tab-nav-' + t);
+        if (viewEl && navEl) {
+          if (t === tabName) {
+            viewEl.classList.remove('hidden');
+            navEl.classList.add('bottom-tab-active');
+          } else {
+            viewEl.classList.add('hidden');
+            navEl.classList.remove('bottom-tab-active');
+          }
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- 1. DARAJANI ANIQLASH TESTI LOGIKASI ---
+    const cheers = [
+      { emoji: "🎯", title: "SPOT ON!", msg: "Brilliant choice! You're sharp!" },
+      { emoji: "🔥", title: "ON FIRE!", msg: "Incredible accuracy! Keep pushing!" },
+      { emoji: "🌟", title: "GENIUS MOVE!", msg: "Outstanding! You're shining bright!" },
+      { emoji: "🚀", title: "SOARING HIGH!", msg: "Great English instincts! Superb!" },
+      { emoji: "💎", title: "FLAWLESS!", msg: "Marvelous answer! Absolutely top notch!" },
+      { emoji: "⚡", title: "LIGHTNING FAST!", msg: "Sharp and confident! Moving forward!" },
+      { emoji: "🏆", title: "CHAMPION VIBES!", msg: "Pure excellence! Wall Street spirit!" },
+      { emoji: "✨", title: "SPLENDID!", msg: "That was wonderful! Keep rocking!" }
+    ];
+
+    function playCheerSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch(e) {}
+    }
+
+    const testQuestions = [
+      {
+            "id": 1,
+            "question": "1. She _______ to the gym every morning before breakfast.",
+            "options": [
+                  "go",
+                  "goes",
+                  "is going",
+                  "went"
+            ],
+            "answer": 1,
+            "level": "Beginner"
+      },
+      {
+            "id": 2,
+            "question": "2. We haven't seen them _______ last summer.",
+            "options": [
+                  "for",
+                  "since",
+                  "during",
+                  "while"
+            ],
+            "answer": 1,
+            "level": "Elementary"
+      },
+      {
+            "id": 3,
+            "question": "3. If I _______ you, I would take that opportunity immediately.",
+            "options": [
+                  "am",
+                  "was",
+                  "were",
+                  "had been"
+            ],
+            "answer": 2,
+            "level": "Pre-Intermediate"
+      },
+      {
+            "id": 4,
+            "question": "4. Despite _______ tired, he continued preparing for his IELTS exam.",
+            "options": [
+                  "being",
+                  "be",
+                  "was",
+                  "to be"
+            ],
+            "answer": 0,
+            "level": "Intermediate"
+      },
+      {
+            "id": 5,
+            "question": "5. By the time the teacher entered, the students _______ their assignment.",
+            "options": [
+                  "finished",
+                  "have finished",
+                  "had finished",
+                  "finish"
+            ],
+            "answer": 2,
+            "level": "Intermediate"
+      },
+      {
+            "id": 6,
+            "question": "6. Hardly _______ entered the room when the phone started ringing.",
+            "options": [
+                  "he had",
+                  "had he",
+                  "he did",
+                  "did he"
+            ],
+            "answer": 1,
+            "level": "Upper-Intermediate"
+      }
+];
+
+    let currentQIndex = 0;
+    let quizScore = 0;
+    let calculatedLevel = "Beginner";
+    let isAnsweringBlocked = false;
+
+    function startQuiz() {
+      document.getElementById('test-welcome-screen').classList.add('hidden');
+      document.getElementById('test-quiz-screen').classList.remove('hidden');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      if (currentQIndex >= testQuestions.length) {
+        showQuizResult();
+        return;
+      }
+
+      isAnsweringBlocked = false;
+      const q = testQuestions[currentQIndex];
+      document.getElementById('question-progress').innerText = `${currentQIndex + 1} / ${testQuestions.length}`;
+      document.getElementById('progress-bar-fill').style.width = `${((currentQIndex + 1) / testQuestions.length) * 100}%`;
+      document.getElementById('question-text').innerText = q.question;
+      document.getElementById('level-badge').innerText = q.level || "Ingliz tili";
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+
+      const letters = ["A", "B", "C", "D"];
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "btn-option w-full p-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-left text-xs font-bold text-slate-200 border border-slate-700/60 flex items-center gap-3";
+        btn.innerHTML = `<span class="w-7 h-7 rounded-xl bg-slate-800 text-blue-400 flex items-center justify-center text-xs font-black border border-slate-700">${letters[idx] || (idx+1)}</span> <span class="flex-1">${opt}</span>`;
+        btn.onclick = () => selectQuizAnswer(idx, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectQuizAnswer(selectedIdx, btnElement) {
+      if (isAnsweringBlocked) return;
+      isAnsweringBlocked = true;
+
+      const q = testQuestions[currentQIndex];
+      if (selectedIdx === q.answer) {
+        quizScore++;
+      }
+
+      // Variantlarni qulflash va tanlanganni belgilash
+      const container = document.getElementById('options-container');
+      Array.from(container.children).forEach((child, idx) => {
+        child.onclick = null;
+        if (idx === selectedIdx) {
+          child.classList.add('selected');
+        }
+      });
+
+      const randomCheer = cheers[Math.floor(Math.random() * cheers.length)];
+      const joyBanner = document.getElementById('joy-feedback');
+      document.getElementById('joy-title').innerText = `${randomCheer.emoji} ${randomCheer.title}`;
+      document.getElementById('joy-message').innerText = randomCheer.msg;
+      
+      joyBanner.classList.remove('hidden');
+      playCheerSound();
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+
+      // Keyingi savol tugmasini ko'rsatish (avto-o'tib ketmaydi!)
+      const nextWrap = document.getElementById('next-question-wrap');
+      const nextText = document.getElementById('btn-next-text');
+      if (currentQIndex < testQuestions.length - 1) {
+        nextText.innerText = "Keyingi savol";
+      } else {
+        nextText.innerText = "Natijani Ko'rish 🏆";
+      }
+      nextWrap.classList.remove('hidden');
+    }
+
+    function proceedNextQuestion() {
+      document.getElementById('joy-feedback').classList.add('hidden');
+      document.getElementById('next-question-wrap').classList.add('hidden');
+      currentQIndex++;
+      if (currentQIndex < testQuestions.length) {
+        loadQuestion();
+      } else {
+        showQuizResult();
+      }
+    }
+
+    function showQuizResult() {
+      document.getElementById('test-quiz-screen').classList.add('hidden');
+      document.getElementById('test-result-screen').classList.remove('hidden');
+
+      const ratio = quizScore / testQuestions.length;
+      if (ratio <= 0.3) {
+        calculatedLevel = "Beginner";
+      } else if (ratio <= 0.55) {
+        calculatedLevel = "Elementary";
+      } else if (ratio <= 0.8) {
+        calculatedLevel = "Pre-Intermediate";
+      } else {
+        calculatedLevel = "Intermediate";
+      }
+
+      document.getElementById('final-level').innerText = calculatedLevel;
+      document.getElementById('final-score').innerText = `To'plangan natija: ${quizScore} / ${testQuestions.length} ball (${Math.round(ratio*100)}%)`;
+      document.getElementById('conf-disp-level').innerText = calculatedLevel;
+      document.getElementById('conf-disp-name').innerText = userFullName || "O'quvchi";
+      document.getElementById('conf-disp-phone').innerText = userPhone || "+998 (--) --- -- --";
+
+      if (window.confetti) {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+
+    function toggleEditDetails() {
+      const viewEl = document.getElementById('conf-view-box');
+      const editEl = document.getElementById('conf-edit-box');
+      if (editEl.classList.contains('hidden')) {
+        editEl.classList.remove('hidden');
+        viewEl.classList.add('hidden');
+      } else {
+        editEl.classList.add('hidden');
+        viewEl.classList.remove('hidden');
+      }
+    }
+
+    function saveEditedDetails() {
+      const newName = (document.getElementById('edit-input-name').value || '').trim();
+      const newPhone = (document.getElementById('edit-input-phone').value || '').trim();
+      if (newName) userFullName = newName;
+      if (newPhone) userPhone = newPhone;
+      document.getElementById('conf-disp-name').innerText = userFullName;
+      document.getElementById('conf-disp-phone').innerText = userPhone || "+998 (--) --- -- --";
+      document.getElementById('header-user-name').innerText = userFullName;
+      toggleEditDetails();
+    }
+
+    function cancelApplicationResult() {
+      if (confirm("Rostdan ham natijani bekor qilib, bosh sahifaga qaytmoqchimisiz?")) {
+        document.getElementById('test-result-screen').classList.add('hidden');
+        document.getElementById('test-welcome-screen').classList.remove('hidden');
+        currentQIndex = 0;
+        quizScore = 0;
+      }
+    }
+
+    async function confirmApplicationSubmission() {
+      const submitBtn = document.getElementById('btn-submit-app');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Arizangiz yuborilmoqda...</span> ⏳`;
+
+      // 1. HTTP API ga ariza yuborish
+      try {
+        await fetch('/api/submit-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: parseInt(uid) || 0,
+            score: quizScore,
+            total: testQuestions.length,
+            level: calculatedLevel,
+            full_name: userFullName,
+            phone: userPhone
+          })
+        });
+      } catch(e) {}
+
+      // 2. Telegram WebApp orqali yuborish
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify({
+          action: "submit_level_test",
+          level: calculatedLevel,
+          score: quizScore,
+          total: testQuestions.length,
+          full_name: userFullName,
+          phone: userPhone
+        }));
+      }
+
+      // 3. Ariza qabul qilindi - bo'limlarni ochish
+      isApplicationSubmitted = true;
+      localStorage.setItem('ws_app_submitted_' + uid, 'true');
+      updateSectionLocks();
+
+      submitBtn.className = "w-full py-4 rounded-2xl bg-emerald-600 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2";
+      submitBtn.innerHTML = `<span>✅ Arizangiz Qabul Qilindi! Barcha bo'limlar ochildi.</span>`;
+
+      if (window.confetti) {
+        confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+      }
+
+      setTimeout(() => {
+        switchTab('courses');
+      }, 1200);
+    }
+
+    // --- 2. KURSLAR LOGIKASI ---
+    const coursesData = [
+      {
+            "id": 2,
+            "name": "IELTS Rocket (7.0+ Kafolati)",
+            "duration": "3 - 5 oy intensiv",
+            "price": "850,000 so'm / oy",
+            "badge": "Top Kurs",
+            "description": "Mock imtihonlar, individual feedback va tajribali IELTS 8.0+ instruktorlari bilan maqsadli tayyorgarlik.",
+            "schedule": "Haftada 3 kun 2 soatdan + haftalik bepul Mock Exam",
+            "audience": "Xorijiy universitetlar va grantlarga topshiruvchilar, IELTS 7.0+ talab qilinadigan abituriyentlar",
+            "syllabus": [
+                  "Reading & Listening uchun maxsus mualliflik strategiyalari (Speed Reading)",
+                  "Writing Task 1 va Task 2 bo'yicha har haftalik individual tekshiruv va tahlil",
+                  "Speaking 1-on-1 repetitsiya va imtihon muhitidagi intervyular",
+                  "Haqiqiy IDP & British Council standartidagi Mock imtihonlar"
+            ],
+            "bonuses": [
+                  "Haftalik bepul rasmiy Mock testlar",
+                  "IELTS 8.5+ balli ustozdan individual mentorlik",
+                  "Barcha Cambridge 1-19 materiallari va audio bazasi bepul"
+            ]
+      },
+      {
+            "id": 3,
+            "name": "Kids English (7 - 13 yosh)",
+            "duration": "Doimiy qabul",
+            "price": "500,000 so'm / oy",
+            "badge": "Bolalar uchun",
+            "description": "Interaktiv o'yinlar, multfilmlar va xalqaro metodika asosida yosh bolalar uchun qiziqarli ingliz tili.",
+            "schedule": "Haftada 3 kun, 1.2 soatdan",
+            "audience": "Maktab o'quvchilari va bolalarining ingliz tilida erkin fikrlashini istagan ota-onalar",
+            "syllabus": [
+                  "Qo'shiqlar, animatsiyalar va o'yinlar orqali til o'rganish",
+                  "To'g'ri talaffuz (Phonics) va so'zlarni xatosiz o'qish",
+                  "Ijodiy topshiriqlar va bolalar psixologiyasiga mos yondashuv"
+            ],
+            "bonuses": [
+                  "Rang-barang bosma o'quv qo'llanmalari",
+                  "Ota-onalar uchun haftalik natijalar hisoboti"
+            ]
+      },
+      {
+            "id": 4,
+            "name": "IT & Dasturlash (Python / Web)",
+            "duration": "6 oy",
+            "price": "900,000 so'm / oy",
+            "badge": "Kelajak kasbi",
+            "description": "Noldan real amaliy loyihalargacha, portfolio yaratish va ishga joylashishda amaliy yordam.",
+            "schedule": "Haftada 3 kun, 2 soatdan + amaliyot darslari",
+            "audience": "Zamonaviy IT sohasiga kirib, mustaqil daromad qilmoqchi bo'lgan yoshlar",
+            "syllabus": [
+                  "Python asoslari, OOP, ma'lumotlar tuzilmalari",
+                  "Web dasturlash: Frontend (HTML/CSS/JS) va Backend (FastAPI, Django)",
+                  "Telegram botlar yaratish va to'lov tizimlariga ulash",
+                  "Real portfolio loyihalari va GitHub repozitoriy tayyorlash"
+            ],
+            "bonuses": [
+                  "Eng yaxshi o'quvchilarga amaliyot va ishga tavsiya",
+                  "Rezume va portfolioni tayyorlashda mentorlik"
+            ]
+      }
+];
+
+    let selectedCourse = null;
+    let currentCourseFilter = 'all';
+
+    function filterCourses(category) {
+      currentCourseFilter = category;
+      document.querySelectorAll('.course-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-category') === category) {
+          btn.className = "course-filter-btn px-3 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-[11px] whitespace-nowrap shadow-sm";
+        } else {
+          btn.className = "course-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50";
+        }
+      });
+      renderCourses();
+    }
+
+    function renderCourses() {
+      const container = document.getElementById('courses-list');
+      container.innerHTML = '';
+
+      const filtered = coursesData.filter(c => {
+        if (currentCourseFilter === 'all') return true;
+        return c.name.toLowerCase().includes(currentCourseFilter.toLowerCase());
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">Ushbu yo\'nalishda kurs topilmadi</div>';
+        return;
+      }
+
+      filtered.forEach(c => {
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-4 flex flex-col gap-2.5 cursor-pointer hover:border-blue-500/50";
+        card.onclick = () => openCourseModal(c.id);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-white">${c.name}</h3>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase tracking-wider">${c.badge}</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">${c.description}</p>
+          <div class="pt-2.5 border-t border-slate-700/50 flex items-center justify-between text-xs">
+            <span class="text-slate-400 text-[11px]">⏳ ${c.duration}</span>
+            <span class="text-emerald-400 font-black text-sm">${c.price}</span>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[11px] text-blue-400 font-bold flex items-center gap-1">Batafsil ma'lumot ➔</span>
+            <span class="text-[10px] text-slate-500">Dars rejasi & Bonuslar</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openCourseModal(courseId) {
+      const c = coursesData.find(item => item.id === courseId);
+      if (!c) return;
+      selectedCourse = c;
+
+      document.getElementById('modal-c-badge').innerText = c.badge;
+      document.getElementById('modal-c-title').innerText = c.name;
+      document.getElementById('modal-c-price').innerText = c.price;
+      document.getElementById('modal-c-desc').innerText = c.description;
+      document.getElementById('modal-c-duration').innerText = c.duration;
+      document.getElementById('modal-c-schedule').innerText = c.schedule || "Haftada 3 kun";
+
+      const syllList = document.getElementById('modal-c-syllabus');
+      syllList.innerHTML = '';
+      (c.syllabus || []).forEach(s => {
+        const li = document.createElement('li');
+        li.className = "flex items-start gap-1.5";
+        li.innerHTML = `<span class="text-blue-400 font-bold">•</span> <span>${s}</span>`;
+        syllList.appendChild(li);
+      });
+
+      const bonList = document.getElementById('modal-c-bonuses');
+      bonList.innerHTML = '';
+      (c.bonuses || []).forEach(b => {
+        const li = document.createElement('li');
+        li.className = "flex items-start gap-1.5";
+        li.innerHTML = `<span class="text-emerald-400 font-bold">✓</span> <span>${b}</span>`;
+        bonList.appendChild(li);
+      });
+
+      document.getElementById('course-modal').classList.remove('hidden');
+    }
+
+    function closeCourseModal() {
+      document.getElementById('course-modal').classList.add('hidden');
+    }
+
+    function enrollCourse() {
+      if (!selectedCourse) return;
+      
+      const payload = {
+        action: "choose_level_or_course",
+        course_name: selectedCourse.name,
+        price: selectedCourse.price
+      };
+
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify(payload));
+      } else {
+        alert(`"${selectedCourse.name}" kursiga arizangiz qabul qilindi!`);
+      }
+      closeCourseModal();
+      if (tg) tg.close();
+    }
+
+    // --- 3. NATIJALAR LOGIKASI ---
+    const resultsData = [
+      {
+            "id": 1,
+            "student_name": "Azizbek Rahimov",
+            "score": "IELTS 8.0",
+            "details": "Listening: 8.5 | Reading: 8.5 | Writing: 7.0 | Speaking: 7.5",
+            "image_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60",
+            "description": "4 oylik intensiv IELTS Rocket kursi bitiruvchisi. General English darajasidan boshlab 8.0 ballga erishdi. Hozirda Webster Universiteti granti sohibi.",
+            "telegram_post_url": "https://t.me/edubot_admin",
+            "video_url": "https://youtube.com"
+      },
+      {
+            "id": 2,
+            "student_name": "Madina Karimova",
+            "score": "CEFR C1",
+            "details": "Umumiy ball: 72 (C1 Oliy daraja)",
+            "image_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60",
+            "description": "General English kursini noldan boshlab C1 darajasiga 10 oyda erishdi. Milliy va xalqaro attestatsiyalardan a'lo daraja bilan o'tdi.",
+            "telegram_post_url": "https://t.me/edubot_admin",
+            "video_url": ""
+      },
+      {
+            "id": 3,
+            "student_name": "Sardor Yusupov",
+            "score": "IELTS 7.5",
+            "details": "Listening: 8.0 | Reading: 8.0 | Writing: 7.0 | Speaking: 7.0",
+            "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=60",
+            "description": "Wall Street mock imtihonlari va individual feedbacklar orqali birinchi urinishda 7.5 ball. Toshkent Xalqaro Vestminster Universitetiga qabul qilindi.",
+            "telegram_post_url": "https://t.me/edubot_admin",
+            "video_url": "https://youtube.com"
+      },
+      {
+            "id": 4,
+            "student_name": "Asrorjon Adhamov",
+            "score": "IELTS 11",
+            "image_url": "/static/uploads/result_1792935022_1aa40e.png",
+            "details": "",
+            "description": "",
+            "telegram_post_url": "",
+            "video_url": ""
+      }
+];
+
+    let currentResultFilter = 'all';
+
+    function filterResults(category) {
+      currentResultFilter = category;
+      document.querySelectorAll('.result-filter-btn').forEach(btn => {
+        if (btn.getAttribute('data-category') === category) {
+          btn.className = "result-filter-btn px-3 py-1.5 rounded-xl bg-amber-500 text-slate-950 font-black text-[11px] whitespace-nowrap shadow-sm";
+        } else {
+          btn.className = "result-filter-btn px-3 py-1.5 rounded-xl bg-slate-800/80 text-slate-400 hover:text-white font-bold text-[11px] whitespace-nowrap border border-slate-700/50";
+        }
+      });
+      renderResults();
+    }
+
+    function renderResults() {
+      const container = document.getElementById('results-list');
+      container.innerHTML = '';
+
+      const filtered = resultsData.filter(r => {
+        if (currentResultFilter === 'all') return true;
+        return r.score.toLowerCase().includes(currentResultFilter.toLowerCase());
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">Ushbu toifada natija topilmadi</div>';
+        return;
+      }
+
+      filtered.forEach(r => {
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-3.5 flex gap-3.5 items-center cursor-pointer hover:border-amber-500/50";
+        card.onclick = () => openResultModal(r.id);
+
+        card.innerHTML = `
+          <img src="${r.image_url}" class="w-16 h-16 rounded-xl object-cover border border-slate-700/80 flex-shrink-0 shadow-md">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <h3 class="text-xs font-black text-white truncate">${r.student_name}</h3>
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 flex-shrink-0">${r.score}</span>
+            </div>
+            <p class="text-[11px] text-slate-300 font-semibold truncate mb-1">${r.details}</p>
+            <div class="flex items-center justify-between text-[10px] pt-1 border-t border-slate-800">
+              <span class="text-blue-400 font-bold flex items-center gap-1">Isbot & Tarixni ko'rish 👁</span>
+              ${r.telegram_post_url ? '<span class="text-slate-400">📱 Telegram post bor</span>' : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // --- 4. RECEPTION & MAXFIY PROMOKOD TEKSHIRISH ---
+    async function verifyUserPromocode() {
+      const input = document.getElementById('user-promocode-input');
+      const resBox = document.getElementById('promocode-result-box');
+      const code = (input.value || '').trim();
+      if (!code) {
+        resBox.className = "p-2.5 rounded-xl text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30";
+        resBox.innerText = "Iltimos, avval promokod matnini kiriting.";
+        resBox.classList.remove('hidden');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/check-promocode?code=${encodeURIComponent(code)}`);
+        const data = await res.json();
+        if (data.valid) {
+          resBox.className = "p-3 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 space-y-1";
+          resBox.innerHTML = `<div>✅ <b>Promokod qabul qilindi!</b></div><div class="text-[11px] text-slate-200">Kupon: <span class="font-mono text-amber-300 font-black">${data.code}</span> — ${data.discount} (${data.description || 'Chegirma tasdiqlandi'})</div>`;
+          resBox.classList.remove('hidden');
+          if (typeof confetti === 'function') confetti({ particleCount: 30, spread: 60 });
+        } else {
+          resBox.className = "p-2.5 rounded-xl text-xs font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30";
+          resBox.innerText = "❌ " + (data.message || "Bunday promokod topilmadi yoki muddati o'tgan.");
+          resBox.classList.remove('hidden');
+        }
+      } catch(e) {
+        resBox.className = "p-2.5 rounded-xl text-xs font-bold bg-blue-500/15 text-blue-300 border border-blue-500/30";
+        resBox.innerText = `Kupon kiritildi: ${code.toUpperCase()}. Uni administratorga taqdim etishingiz mumkin.`;
+        resBox.classList.remove('hidden');
+      }
+    }
+
+    function openResultModal(resultId) {
+      const r = resultsData.find(item => item.id === resultId);
+      if (!r) return;
+
+      document.getElementById('modal-r-img').src = r.image_url;
+      document.getElementById('modal-r-name').innerText = r.student_name;
+      document.getElementById('modal-r-score').innerText = r.score;
+      document.getElementById('modal-r-details').innerText = r.details;
+      document.getElementById('modal-r-desc').innerText = r.description;
+
+      const tgBtn = document.getElementById('modal-r-tg-btn');
+      if (r.telegram_post_url && r.telegram_post_url.trim()) {
+        tgBtn.href = r.telegram_post_url;
+        tgBtn.classList.remove('hidden');
+        tgBtn.onclick = (e) => {
+          if (tg && tg.openTelegramLink && r.telegram_post_url.includes('t.me')) {
+            e.preventDefault();
+            tg.openTelegramLink(r.telegram_post_url);
+          }
+        };
+      } else {
+        tgBtn.classList.add('hidden');
+      }
+
+      const vidBtn = document.getElementById('modal-r-video-btn');
+      if (r.video_url && r.video_url.trim()) {
+        vidBtn.href = r.video_url;
+        vidBtn.classList.remove('hidden');
+      } else {
+        vidBtn.classList.add('hidden');
+      }
+
+      document.getElementById('result-modal').classList.remove('hidden');
+    }
+
+    function closeResultModal() {
+      document.getElementById('result-modal').classList.add('hidden');
+    }
+
+    // Modal tashqarisini bosganda yopish
+    document.getElementById('course-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'course-modal') closeCourseModal();
+    });
+    document.getElementById('result-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'result-modal') closeResultModal();
+    });
+
+    // --- 5. GURUH JADVALLARI & SIG'IM LOGIKASI ---
+    const schedulesData = [
+      {
+        "id": 1,
+        "days": "Dushanba - Chorshanba - Juma",
+        "time": "09:00 - 10:30",
+        "type": "Ertalabki guruh",
+        "level": "Beginner / Elementary",
+        "current_students": 9,
+        "max_students": 12
+      },
+      {
+        "id": 2,
+        "days": "Dushanba - Chorshanba - Juma",
+        "time": "14:30 - 16:00",
+        "type": "Kunduzgi guruh",
+        "level": "Pre-Intermediate",
+        "current_students": 12,
+        "max_students": 12
+      },
+      {
+        "id": 3,
+        "days": "Dushanba - Chorshanba - Juma",
+        "time": "18:30 - 20:00",
+        "type": "Kechki guruh (Ishchilar uchun)",
+        "level": "Intermediate / IELTS",
+        "current_students": 7,
+        "max_students": 12
+      },
+      {
+        "id": 4,
+        "days": "Seshanba - Payshanba - Shanba",
+        "time": "10:00 - 11:30",
+        "type": "Ertalabki guruh",
+        "level": "Elementary",
+        "current_students": 10,
+        "max_students": 12
+      },
+      {
+        "id": 5,
+        "days": "Seshanba - Payshanba - Shanba",
+        "time": "15:00 - 16:30",
+        "type": "Kunduzgi guruh",
+        "level": "Intermediate",
+        "current_students": 12,
+        "max_students": 12
+      },
+      {
+        "id": 6,
+        "days": "Seshanba - Payshanba - Shanba",
+        "time": "18:30 - 20:00",
+        "type": "Kechki intensiv guruh",
+        "level": "IELTS 7.0+",
+        "current_students": 8,
+        "max_students": 10
+      }
+    ];
+
+    function renderSchedules() {
+      const container = document.getElementById('schedules-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      schedulesData.forEach(s => {
+        const isFull = s.current_students >= s.max_students;
+        const remaining = Math.max(0, s.max_students - s.current_students);
+        const pct = Math.min(100, Math.round((s.current_students / s.max_students) * 100));
+
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-4 space-y-3";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">${s.type}</span>
+            <span class="text-[10px] font-black ${isFull ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'} px-2 py-0.5 rounded border">
+              ${s.level}
+            </span>
+          </div>
+
+          <div class="space-y-1 text-xs">
+            <div class="font-bold text-white flex items-center gap-2"><span>📅</span> ${s.days}</div>
+            <div class="font-semibold text-slate-300 flex items-center gap-2"><span>⏰</span> ${s.time}</div>
+          </div>
+
+          <!-- Bandlik ko'rsatkichi -->
+          <div class="space-y-1.5 pt-1 border-t border-slate-800">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-slate-400">O'quvchilar soni:</span>
+              <b class="${isFull ? 'text-rose-400' : 'text-emerald-400'} font-mono">${s.current_students} / ${s.max_students} ta (${isFull ? 'Guruh to\'lgan' : remaining + ' ta bo\'sh joy'})</b>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+              <div class="h-2 rounded-full ${isFull ? 'bg-rose-500' : pct >= 75 ? 'bg-amber-400' : 'bg-emerald-400'} transition-all" style="width: ${pct}%"></div>
+            </div>
+          </div>
+
+          <!-- Ariza tugmasi -->
+          <div class="pt-1">
+            ${isFull ? `
+              <button disabled class="w-full py-2.5 rounded-xl bg-slate-800/80 text-rose-400 font-bold text-xs border border-rose-500/20 cursor-not-allowed flex items-center justify-center gap-1.5">
+                <span>🚫 Guruh to'lgan (Qabul yopiq)</span>
+              </button>
+            ` : `
+              <button onclick="enrollScheduleGroup(${s.id})" class="btn-gradient w-full py-2.5 rounded-xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition">
+                <span>✍️ Guruhga qo'shilish uchun ariza</span>
+              </button>
+            `}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function enrollScheduleGroup(scheduleId) {
+      const group = schedulesData.find(s => s.id === scheduleId);
+      if (!group) return;
+
+      let name = userFullName;
+      let phone = userPhone;
+      if (!phone || phone.includes('--')) {
+        phone = prompt("Guruhga yozilish uchun telefon raqamingizni kiriting:", "+998");
+        if (!phone) return;
+        userPhone = phone;
+      }
+
+      try {
+        await fetch('/api/enroll-schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            schedule_id: scheduleId,
+            telegram_id: parseInt(uid) || 0,
+            full_name: name,
+            phone: phone,
+            group_info: `${group.type} (${group.level})`
+          })
+        });
+      } catch(e) {}
+
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify({
+          action: "enroll_schedule",
+          schedule_id: scheduleId,
+          full_name: name,
+          phone: phone,
+          group_info: `${group.type} (${group.level})`
+        }));
+      }
+
+      group.current_students = Math.min(group.max_students, group.current_students + 1);
+      renderSchedules();
+      alert(`✅ Arizangiz qabul qilindi! "${group.type}" bo'yicha reception admini tez orada siz bilan bog'lanadi.`);
+    }
+
+    // --- 6. TADBIRLAR (EVENTS) LOGIKASI ---
+    let eventsData = [
+      {
+        "id": 1,
+        "title": "IELTS Speaking 8.0+ Ochiq Master-Klass",
+        "date_time": "Shanba, 16:00",
+        "seats_limit": 30,
+        "registered_count": 19,
+        "description": "Tajribali ustozdan Speaking qismida 8.0+ olish sirlari va 1-on-1 intervyu amaliyoti."
+      }
+    ];
+
+    async function loadEvents() {
+      try {
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        if (data && data.length > 0) {
+          eventsData = data;
+        }
+      } catch(e) {}
+      renderEvents();
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('events-list');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (eventsData.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">Hozircha rejalashtirilgan faol tadbirlar yo\'q.</div>';
+        return;
+      }
+
+      eventsData.forEach(ev => {
+        const isFull = ev.registered_count >= ev.seats_limit;
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-4 space-y-3 border-purple-500/30";
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider">Master-Klass</span>
+            <span class="text-xs font-bold text-white">📅 ${ev.date_time}</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-white">${ev.title}</h3>
+            <p class="text-xs text-slate-300 mt-1 leading-relaxed">${ev.description || ''}</p>
+          </div>
+          <div class="flex items-center justify-between text-xs pt-1 border-t border-slate-800">
+            <span class="text-slate-400">Qatnashchilar:</span>
+            <b class="${isFull ? 'text-rose-400' : 'text-purple-300'} font-bold">${ev.registered_count} / ${ev.seats_limit} ta</b>
+          </div>
+          <button onclick="joinEvent(${ev.id})" ${isFull ? 'disabled' : ''} class="${isFull ? 'bg-slate-800 text-rose-400 border border-rose-500/20 cursor-not-allowed' : 'btn-gradient text-white shadow-purple-500/20'} w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition">
+            ${isFull ? '🚫 Joylar to\'lgan' : '🎟 Ro\'yxatdan o\'tish (Qo\'shilish)'}
+          </button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function joinEvent(eventId) {
+      let name = userFullName;
+      let phone = userPhone;
+      if (!phone || phone.includes('--')) {
+        phone = prompt("Tadbirga ro'yxatdan o'tish uchun telefon raqamingizni kiriting:", "+998");
+        if (!phone) return;
+        userPhone = phone;
+      }
+
+      try {
+        const res = await fetch('/api/join-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_id: eventId,
+            user_id: parseInt(uid) || 0,
+            full_name: name,
+            phone: phone
+          })
+        });
+        const data = await res.json();
+        alert(data.message || "Tadbirga ro'yxatdan o'tdingiz!");
+        loadEvents();
+      } catch(e) {
+        alert("Tadbirga ro'yxatdan o'tish yuborildi!");
+      }
+    }
+
+    // Boshlang'ich render
+    initUserStatus();
+    renderCourses();
+    renderSchedules();
+    loadEvents();
+    renderResults();
+    switchTab(initialTab);
+  </script>
+</body>
+</html>

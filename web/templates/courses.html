@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kurslar va Narxlar - Wall Street</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f172a 50%, #020617 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: all 0.25s ease;
+    }
+    .glass-card:active {
+      transform: scale(0.985);
+    }
+    .btn-gradient {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #1d4ed8 100%);
+      box-shadow: 0 8px 25px -4px rgba(37, 99, 235, 0.5);
+    }
+    .btn-gradient:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="min-h-screen p-4 pb-12 flex flex-col justify-between">
+  <div class="max-w-md mx-auto w-full">
+    
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-blue-400">Wall Street Education</span>
+        <h1 class="text-xl font-black text-white tracking-tight">📚 Kurslar va Narxlar</h1>
+      </div>
+      <button onclick="window.Telegram?.WebApp?.close()" class="w-8 h-8 rounded-full bg-slate-800/80 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold border border-slate-700">✕</button>
+    </div>
+
+    <!-- KURSLAR RO'YXATI -->
+    <div id="courses-list" class="space-y-4"></div>
+
+    <div class="mt-6 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-emerald-500/15 border border-emerald-500/30 text-center">
+      <p class="text-xs text-emerald-300 font-bold flex items-center justify-center gap-1.5">
+        <span>✨</span> 1-sinov darsi barcha kurslarimiz uchun mutlaqo bepul!
+      </p>
+    </div>
+
+  </div>
+
+  <!-- BATAFSIL MA'LUMOT MODAL / BOTTOM SHEET -->
+  <div id="course-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+    <div class="glass-card bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[88vh] overflow-y-auto p-6 space-y-4 relative">
+      
+      <button onclick="closeCourseModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold border border-slate-700">✕</button>
+      
+      <div class="pr-8">
+        <span id="modal-badge" class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-black uppercase tracking-wider">Top Kurs</span>
+        <h2 id="modal-title" class="text-lg font-black text-white mt-1 leading-snug">IELTS Rocket</h2>
+        <p id="modal-price" class="text-emerald-400 font-extrabold text-base mt-0.5">850,000 so'm / oy</p>
+      </div>
+
+      <p id="modal-desc" class="text-xs text-slate-300 leading-relaxed bg-slate-800/50 p-3 rounded-xl border border-slate-700/50">
+        Tavsif yuklanmoqda...
+      </p>
+
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40">
+          <span class="text-slate-400 text-[10px] block">⏳ Davomiyligi:</span>
+          <span id="modal-duration" class="font-bold text-white text-[11px]">3 - 5 oy</span>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/40">
+          <span class="text-slate-400 text-[10px] block">🕒 Dars tartibi:</span>
+          <span id="modal-schedule" class="font-bold text-white text-[11px]">Haftada 3 kun</span>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-bold text-slate-200 mb-2 flex items-center gap-1.5">
+          <span>📖</span> Kurs dasturida nimalar o'rgatiladi:
+        </h4>
+        <ul id="modal-syllabus" class="space-y-1.5 text-xs text-slate-300 pl-1"></ul>
+      </div>
+
+      <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+        <h4 class="text-xs font-bold text-emerald-400 mb-1.5 flex items-center gap-1.5">
+          <span>🎁</span> Sizga beriladigan maxsus bonuslar:
+        </h4>
+        <ul id="modal-bonuses" class="space-y-1 text-xs text-emerald-200/90 pl-1"></ul>
+      </div>
+
+      <button id="modal-enroll-btn" onclick="enrollCourse()" class="btn-gradient w-full py-3.5 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition duration-200">
+        <span>Ushbu kursga yozilish</span> ✍️
+      </button>
+
+    </div>
+  </div>
+
+  <footer class="text-center text-[11px] text-slate-500 mt-6">
+    Wall Street Education • O'quv Yo'nalishlari
+  </footer>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      tg.ready();
+    }
+
+    const coursesData = {{ courses | tojson }};
+    let currentSelectedCourse = null;
+
+    function renderCourses() {
+      const container = document.getElementById('courses-list');
+      container.innerHTML = '';
+
+      coursesData.forEach(c => {
+        const card = document.createElement('div');
+        card.className = "glass-card rounded-2xl p-4 flex flex-col gap-2.5 cursor-pointer hover:border-blue-500/50";
+        card.onclick = () => openCourseModal(c.id);
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-extrabold text-white">${c.name}</h3>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 uppercase tracking-wider">${c.badge}</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">${c.description}</p>
+          <div class="pt-2.5 border-t border-slate-700/50 flex items-center justify-between text-xs">
+            <span class="text-slate-400 text-[11px]">⏳ ${c.duration}</span>
+            <span class="text-emerald-400 font-black text-sm">${c.price}</span>
+          </div>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[11px] text-blue-400 font-bold flex items-center gap-1">Batafsil ma'lumot ➔</span>
+            <span class="text-[10px] text-slate-500">Dars rejasi & Bonuslar</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openCourseModal(courseId) {
+      const c = coursesData.find(item => item.id === courseId);
+      if (!c) return;
+      currentSelectedCourse = c;
+
+      document.getElementById('modal-badge').innerText = c.badge;
+      document.getElementById('modal-title').innerText = c.name;
+      document.getElementById('modal-price').innerText = c.price;
+      document.getElementById('modal-desc').innerText = c.description;
+      document.getElementById('modal-duration').innerText = c.duration;
+      document.getElementById('modal-schedule').innerText = c.schedule || "Haftada 3 kun";
+
+      const syllList = document.getElementById('modal-syllabus');
+      syllList.innerHTML = '';
+      (c.syllabus || []).forEach(s => {
+        const li = document.createElement('li');
+        li.className = "flex items-start gap-1.5";
+        li.innerHTML = `<span class="text-blue-400 font-bold">•</span> <span>${s}</span>`;
+        syllList.appendChild(li);
+      });
+
+      const bonList = document.getElementById('modal-bonuses');
+      bonList.innerHTML = '';
+      (c.bonuses || []).forEach(b => {
+        const li = document.createElement('li');
+        li.className = "flex items-start gap-1.5";
+        li.innerHTML = `<span class="text-emerald-400 font-bold">✓</span> <span>${b}</span>`;
+        bonList.appendChild(li);
+      });
+
+      document.getElementById('course-modal').classList.remove('hidden');
+    }
+
+    function closeCourseModal() {
+      document.getElementById('course-modal').classList.add('hidden');
+    }
+
+    function enrollCourse() {
+      if (!currentSelectedCourse) return;
+      
+      const payload = {
+        action: "choose_level_or_course",
+        course_name: currentSelectedCourse.name,
+        price: currentSelectedCourse.price
+      };
+
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify(payload));
+      } else {
+        alert(`"${currentSelectedCourse.name}" kursiga arizangiz qabul qilindi! Reception xodimlari tez orada siz bilan bog'lanishadi.`);
+      }
+      closeCourseModal();
+      if (tg) tg.close();
+    }
+
+    document.getElementById('course-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'course-modal') {
+        closeCourseModal();
+      }
+    });
+
+    renderCourses();
+  </script>
+</body>
+</html>

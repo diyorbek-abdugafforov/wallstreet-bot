@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "days": "Dushanba - Chorshanba - Juma",
+    "time": "09:00 - 10:30",
+    "type": "Ertalabki guruh",
+    "level": "Beginner / Elementary",
+    "current_students": 9,
+    "max_students": 12
+  },
+  {
+    "id": 2,
+    "days": "Dushanba - Chorshanba - Juma",
+    "time": "14:30 - 16:00",
+    "type": "Kunduzgi guruh",
+    "level": "Pre-Intermediate",
+    "current_students": 12,
+    "max_students": 12
+  },
+  {
+    "id": 3,
+    "days": "Dushanba - Chorshanba - Juma",
+    "time": "18:30 - 20:00",
+    "type": "Kechki guruh (Ishchilar uchun)",
+    "level": "Intermediate / IELTS",
+    "current_students": 7,
+    "max_students": 12
+  },
+  {
+    "id": 4,
+    "days": "Seshanba - Payshanba - Shanba",
+    "time": "10:00 - 11:30",
+    "type": "Ertalabki guruh",
+    "level": "Elementary",
+    "current_students": 10,
+    "max_students": 12
+  },
+  {
+    "id": 5,
+    "days": "Seshanba - Payshanba - Shanba",
+    "time": "15:00 - 16:30",
+    "type": "Kunduzgi guruh",
+    "level": "Intermediate",
+    "current_students": 12,
+    "max_students": 12
+  },
+  {
+    "id": 6,
+    "days": "Seshanba - Payshanba - Shanba",
+    "time": "18:30 - 20:00",
+    "type": "Kechki intensiv guruh",
+    "level": "IELTS 7.0+",
+    "current_students": 8,
+    "max_students": 10
+  }
+]

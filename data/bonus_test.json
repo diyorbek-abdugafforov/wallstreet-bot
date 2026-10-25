@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "question": "1. What is the synonym of 'Crucial'?",
+    "options": ["Minor", "Essential", "Optional", "Simple"],
+    "answer": 1,
+    "explanation": "'Crucial' means extremely important or essential."
+  },
+  {
+    "id": 2,
+    "question": "2. Neither the teacher nor the students _______ present today.",
+    "options": ["was", "were", "is", "be"],
+    "answer": 1,
+    "explanation": "When using 'neither... nor', the verb agrees with the closer subject ('students' -> plural 'were')."
+  },
+  {
+    "id": 3,
+    "question": "3. The project _______ by the end of next month.",
+    "options": ["will complete", "will have been completed", "has completed", "completed"],
+    "answer": 1,
+    "explanation": "Future Perfect Passive is used for actions completed before a future time."
+  }
+]

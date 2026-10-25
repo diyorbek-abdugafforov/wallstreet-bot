@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Secrets & Local Config
+.env
+
+# Binary files
+cloudflared.exe
+*.exe
+
+# Database (optional if you want clean db in repo)
+# edubot.db
+
+# OS
+Thumbs.db
+.DS_Store

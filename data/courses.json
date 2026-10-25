@@ -1,0 +1,62 @@
+[
+  {
+    "id": 2,
+    "name": "IELTS Rocket (7.0+ Kafolati)",
+    "duration": "3 - 5 oy intensiv",
+    "price": "850,000 so'm / oy",
+    "badge": "Top Kurs",
+    "description": "Mock imtihonlar, individual feedback va tajribali IELTS 8.0+ instruktorlari bilan maqsadli tayyorgarlik.",
+    "schedule": "Haftada 3 kun 2 soatdan + haftalik bepul Mock Exam",
+    "audience": "Xorijiy universitetlar va grantlarga topshiruvchilar, IELTS 7.0+ talab qilinadigan abituriyentlar",
+    "syllabus": [
+      "Reading & Listening uchun maxsus mualliflik strategiyalari (Speed Reading)",
+      "Writing Task 1 va Task 2 bo'yicha har haftalik individual tekshiruv va tahlil",
+      "Speaking 1-on-1 repetitsiya va imtihon muhitidagi intervyular",
+      "Haqiqiy IDP & British Council standartidagi Mock imtihonlar"
+    ],
+    "bonuses": [
+      "Haftalik bepul rasmiy Mock testlar",
+      "IELTS 8.5+ balli ustozdan individual mentorlik",
+      "Barcha Cambridge 1-19 materiallari va audio bazasi bepul"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Kids English (7 - 13 yosh)",
+    "duration": "Doimiy qabul",
+    "price": "500,000 so'm / oy",
+    "badge": "Bolalar uchun",
+    "description": "Interaktiv o'yinlar, multfilmlar va xalqaro metodika asosida yosh bolalar uchun qiziqarli ingliz tili.",
+    "schedule": "Haftada 3 kun, 1.2 soatdan",
+    "audience": "Maktab o'quvchilari va bolalarining ingliz tilida erkin fikrlashini istagan ota-onalar",
+    "syllabus": [
+      "Qo'shiqlar, animatsiyalar va o'yinlar orqali til o'rganish",
+      "To'g'ri talaffuz (Phonics) va so'zlarni xatosiz o'qish",
+      "Ijodiy topshiriqlar va bolalar psixologiyasiga mos yondashuv"
+    ],
+    "bonuses": [
+      "Rang-barang bosma o'quv qo'llanmalari",
+      "Ota-onalar uchun haftalik natijalar hisoboti"
+    ]
+  },
+  {
+    "id": 4,
+    "name": "IT & Dasturlash (Python / Web)",
+    "duration": "6 oy",
+    "price": "900,000 so'm / oy",
+    "badge": "Kelajak kasbi",
+    "description": "Noldan real amaliy loyihalargacha, portfolio yaratish va ishga joylashishda amaliy yordam.",
+    "schedule": "Haftada 3 kun, 2 soatdan + amaliyot darslari",
+    "audience": "Zamonaviy IT sohasiga kirib, mustaqil daromad qilmoqchi bo'lgan yoshlar",
+    "syllabus": [
+      "Python asoslari, OOP, ma'lumotlar tuzilmalari",
+      "Web dasturlash: Frontend (HTML/CSS/JS) va Backend (FastAPI, Django)",
+      "Telegram botlar yaratish va to'lov tizimlariga ulash",
+      "Real portfolio loyihalari va GitHub repozitoriy tayyorlash"
+    ],
+    "bonuses": [
+      "Eng yaxshi o'quvchilarga amaliyot va ishga tavsiya",
+      "Rezume va portfolioni tayyorlashda mentorlik"
+    ]
+  }
+]

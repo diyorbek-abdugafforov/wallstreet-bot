@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "student_name": "Azizbek Rahimov",
+    "score": "IELTS 8.0",
+    "details": "Listening: 8.5 | Reading: 8.5 | Writing: 7.0 | Speaking: 7.5",
+    "image_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=60",
+    "description": "4 oylik intensiv IELTS Rocket kursi bitiruvchisi. General English darajasidan boshlab 8.0 ballga erishdi. Hozirda Webster Universiteti granti sohibi.",
+    "telegram_post_url": "https://t.me/edubot_admin",
+    "video_url": "https://youtube.com"
+  },
+  {
+    "id": 2,
+    "student_name": "Madina Karimova",
+    "score": "CEFR C1",
+    "details": "Umumiy ball: 72 (C1 Oliy daraja)",
+    "image_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&auto=format&fit=crop&q=60",
+    "description": "General English kursini noldan boshlab C1 darajasiga 10 oyda erishdi. Milliy va xalqaro attestatsiyalardan a'lo daraja bilan o'tdi.",
+    "telegram_post_url": "https://t.me/edubot_admin",
+    "video_url": ""
+  },
+  {
+    "id": 3,
+    "student_name": "Sardor Yusupov",
+    "score": "IELTS 7.5",
+    "details": "Listening: 8.0 | Reading: 8.0 | Writing: 7.0 | Speaking: 7.0",
+    "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=60",
+    "description": "Wall Street mock imtihonlari va individual feedbacklar orqali birinchi urinishda 7.5 ball. Toshkent Xalqaro Vestminster Universitetiga qabul qilindi.",
+    "telegram_post_url": "https://t.me/edubot_admin",
+    "video_url": "https://youtube.com"
+  },
+  {
+    "id": 4,
+    "student_name": "Asrorjon Adhamov",
+    "score": "IELTS 11",
+    "image_url": "/static/uploads/result_1792935022_1aa40e.png",
+    "details": "",
+    "description": "",
+    "telegram_post_url": "",
+    "video_url": ""
+  }
+]

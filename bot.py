@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 import subprocess
 import re
 from typing import Optional
@@ -8,6 +9,28 @@ from pathlib import Path
 import uvicorn
 import config
 from config import BOT_TOKEN, ADMINS, WEB_HOST, WEB_PORT, WEBAPP_BASE_URL
+
+def free_port(port: int = 8000):
+    """Band bo'lib qolgan portni (8000) avtomatik bo'shatish"""
+    try:
+        current_pid = os.getpid()
+        cmd = f'netstat -ano | findstr :{port}'
+        out = subprocess.check_output(cmd, shell=True, text=True, errors="ignore")
+        for line in out.strip().splitlines():
+            parts = line.split()
+            if len(parts) >= 5 and "LISTENING" in parts:
+                pid = int(parts[-1])
+                if pid != current_pid and pid > 0:
+                    subprocess.run(f'taskkill /F /PID {pid}', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+def kill_existing_cloudflared():
+    """Eski fonda qolib ketgan cloudflared jarayonlarini tozalash"""
+    try:
+        subprocess.run('taskkill /F /IM cloudflared.exe', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
 
 if hasattr(sys.stdout, 'reconfigure'):
     try:
@@ -87,6 +110,9 @@ async def run_web_server():
     await server.serve()
 
 async def main():
+    free_port(WEB_PORT)
+    kill_existing_cloudflared()
+
     if not BOT_TOKEN:
         logger.error("BOT_TOKEN aniqlanmadi! Iltimos, .env faylida BOT_TOKEN ni to'ldiring.")
         print("\n[DIQQAT] .env faylida BOT_TOKEN ko'rsatilmagan! Bot ishga tushishi uchun BotFather bergan tokenni .env fayliga kiriting.\n")

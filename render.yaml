@@ -6,13 +6,13 @@ services:
     startCommand: python bot.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.13.0
+        value: 3.12.8
       - key: BOT_TOKEN
-        sync: false
+        value: 8927490106:AAE_R9EREzzRD3TOh0qe4-93Leyl25FLpYc
       - key: ADMIN_ID
-        sync: false
+        value: "6262775861"
       - key: MANAGER_GROUP_ID
-        sync: false
+        value: "-1002923292267"
       - key: WEBAPP_BASE_URL
         value: https://wollstreet.netlify.app
       - key: ADMIN_USERNAME
